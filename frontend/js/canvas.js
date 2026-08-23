@@ -8,6 +8,7 @@ const DEVICE_ICONS = {
     "switch":    "/static/assets/icons/switch.svg",
     "server":    "/static/assets/icons/server.svg",
     "siem":      "/static/assets/icons/siem.svg",
+    "wazuh":     "/static/assets/icons/siem.svg",
     "pc":        "/static/assets/icons/pc.svg",
     "endpoint":  "/static/assets/icons/pc.svg",
     "cloud":     "/static/assets/icons/cloud.svg",
@@ -20,6 +21,8 @@ const BORDER_COLORS = {
     "router":    "#38bdf8",
     "switch":    "#a78bfa",
     "server":    "#34d399",
+    "siem":      "#eab308",
+    "wazuh":     "#eab308",
     "pc":        "#60a5fa",
     "endpoint":  "#60a5fa",
     "cloud":     "#38bdf8",
@@ -198,20 +201,23 @@ function renderNetwork(container, topo) {
 async function addNewDevice(type) {
     const id = "dev_" + Math.random().toString(36).substr(2, 6);
     const count = currentTopology.devices.length + 1;
-    const subnetIp = `172.16.175.${200 + count}`;
+    const isWazuh = (type === "wazuh" || type === "siem");
+    const defaultIp = isWazuh ? "172.16.175.145" : `172.16.175.${200 + count}`;
+    const defaultName = isWazuh ? "Wazuh-Manager-VM" : `${type.toUpperCase()}-${count}`;
+    const defaultOs = isWazuh ? "Wazuh SIEM Server 4.14.7 (VMware)" : (type === "pc" ? "Windows 11" : type === "firewall" ? "FortiOS 7.2" : "Linux");
 
     const newDev = {
         id: id,
-        name: `${type.toUpperCase()}-${count}`,
-        ip: subnetIp,
+        name: defaultName,
+        ip: defaultIp,
         type: type,
-        os: type === "pc" ? "Windows 11" : type === "firewall" ? "FortiOS 7.2" : "Linux",
-        criticality: type === "firewall" ? 9 : 5,
+        os: defaultOs,
+        criticality: isWazuh ? 10 : (type === "firewall" ? 9 : 5),
         syslog_format: "auto",
         x: (Math.random() - 0.5) * 250,
         y: (Math.random() - 0.5) * 250,
         verified: true,
-        open_ports: [22, 80, 443]
+        open_ports: isWazuh ? [22, 443, 514, 1514, 1515, 55000] : [22, 80, 443]
     };
 
     currentTopology.devices.push(newDev);

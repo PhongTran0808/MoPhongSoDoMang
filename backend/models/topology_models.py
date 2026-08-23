@@ -7,7 +7,7 @@ class DeviceModel(BaseModel):
     name: str = Field(description="Display name e.g. FortiGate-Core")
     ip: str = Field(description="Primary IP address e.g. 172.16.175.200")
     secondary_ip: Optional[str] = None
-    type: Literal["firewall", "router", "switch", "server", "endpoint", "pc", "cloud", "internet", "unknown"] = "server"
+    type: Literal["firewall", "router", "switch", "server", "endpoint", "pc", "cloud", "internet", "siem", "wazuh", "unknown"] = "server"
     os: str = "Linux"
     criticality: int = Field(default=5, ge=1, le=10)
     syslog_format: str = Field(default="auto", description="auto | cef | winevent | cisco | syslog")

@@ -136,6 +136,7 @@ function renderDevicePropertyPanel(dev) {
                 <option value="server" ${dev.type === 'server' ? 'selected' : ''}>🖥️ Server (Linux/Windows)</option>
                 <option value="pc" ${dev.type === 'pc' ? 'selected' : ''}>💻 User PC / Endpoint</option>
                 <option value="cloud" ${dev.type === 'cloud' ? 'selected' : ''}>☁️ Cloud / Internet (WAN)</option>
+                <option value="wazuh" ${dev.type === 'wazuh' || dev.type === 'siem' ? 'selected' : ''}>🛡️ Wazuh SIEM Server (172.16.175.145)</option>
             </select>
         </div>
 

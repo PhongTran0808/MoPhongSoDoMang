@@ -9,8 +9,8 @@
       "os": "Public WAN Cloud",
       "criticality": 2,
       "syslog_format": "auto",
-      "x": 3.0,
-      "y": -515.0,
+      "x": 0.0,
+      "y": -700.0,
       "verified": true,
       "open_ports": [
         80,
@@ -29,8 +29,8 @@
       "os": "FortiOS 7.2 (HA Active)",
       "criticality": 10,
       "syslog_format": "auto",
-      "x": -125.0,
-      "y": -238.0,
+      "x": -180.0,
+      "y": -550.0,
       "verified": true,
       "open_ports": [
         22,
@@ -51,8 +51,8 @@
       "os": "FortiOS 7.2 (HA Standby)",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": 146.0,
-      "y": -298.0,
+      "x": 180.0,
+      "y": -550.0,
       "verified": true,
       "open_ports": [
         22,
@@ -71,8 +71,8 @@
       "os": "Cisco NX-OS",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": -128.0,
-      "y": 128.0,
+      "x": -200.0,
+      "y": -350.0,
       "verified": true,
       "open_ports": [
         22,
@@ -91,48 +91,8 @@
       "os": "Cisco NX-OS",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": 178.0,
-      "y": 132.0,
-      "verified": true,
-      "open_ports": [
-        22,
-        80,
-        443
-      ],
-      "ha_group": null,
-      "vpn_tunnel": null
-    },
-    {
-      "id": "dev_dc_core1",
-      "name": "Catalyst-9300-Core1",
-      "ip": "172.16.175.204",
-      "secondary_ip": null,
-      "type": "switch",
-      "os": "Cisco IOS-XE",
-      "criticality": 8,
-      "syslog_format": "auto",
-      "x": -173.0,
-      "y": 446.0,
-      "verified": true,
-      "open_ports": [
-        22,
-        80,
-        443
-      ],
-      "ha_group": null,
-      "vpn_tunnel": null
-    },
-    {
-      "id": "dev_dc_core2",
-      "name": "Catalyst-9300-Core2",
-      "ip": "172.16.175.205",
-      "secondary_ip": null,
-      "type": "switch",
-      "os": "Cisco IOS-XE",
-      "criticality": 8,
-      "syslog_format": "auto",
-      "x": 224.0,
-      "y": 432.0,
+      "x": 200.0,
+      "y": -350.0,
       "verified": true,
       "open_ports": [
         22,
@@ -151,8 +111,8 @@
       "os": "Cisco IOS-XE",
       "criticality": 7,
       "syslog_format": "auto",
-      "x": -457.0,
-      "y": -33.0,
+      "x": -400.0,
+      "y": -150.0,
       "verified": true,
       "open_ports": [
         22,
@@ -171,8 +131,8 @@
       "os": "Ubuntu 22.04 LTS (Nginx)",
       "criticality": 8,
       "syslog_format": "auto",
-      "x": -668.0,
-      "y": -56.0,
+      "x": -500.0,
+      "y": 50.0,
       "verified": true,
       "open_ports": [
         80,
@@ -191,8 +151,8 @@
       "os": "Ubuntu 22.04 LTS",
       "criticality": 7,
       "syslog_format": "auto",
-      "x": -661.0,
-      "y": 158.0,
+      "x": -300.0,
+      "y": 50.0,
       "verified": true,
       "open_ports": [
         80,
@@ -211,8 +171,8 @@
       "os": "Cisco IOS-XE",
       "criticality": 7,
       "syslog_format": "auto",
-      "x": -851.0,
-      "y": 554.0,
+      "x": -800.0,
+      "y": -150.0,
       "verified": true,
       "open_ports": [
         22,
@@ -230,8 +190,8 @@
       "os": "Windows Server 2022 (DNS)",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": -1067.0,
-      "y": 830.0,
+      "x": -900.0,
+      "y": 50.0,
       "verified": true,
       "open_ports": [
         53,
@@ -249,8 +209,8 @@
       "os": "Windows Server 2022 (DHCP)",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": -869.0,
-      "y": 829.0,
+      "x": -800.0,
+      "y": 50.0,
       "verified": true,
       "open_ports": [
         67,
@@ -268,8 +228,8 @@
       "os": "Linux RHEL 9",
       "criticality": 8,
       "syslog_format": "auto",
-      "x": -651.0,
-      "y": 805.0,
+      "x": -700.0,
+      "y": 50.0,
       "verified": true,
       "open_ports": [
         22,
@@ -287,8 +247,8 @@
       "os": "Cisco IOS-XE",
       "criticality": 8,
       "syslog_format": "auto",
-      "x": 457.0,
-      "y": 31.0,
+      "x": 400.0,
+      "y": -150.0,
       "verified": true,
       "open_ports": [
         22,
@@ -306,8 +266,8 @@
       "os": "RedHat Enterprise 9",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": 812.0,
-      "y": -58.0,
+      "x": 500.0,
+      "y": 50.0,
       "verified": true,
       "open_ports": [
         22,
@@ -327,8 +287,8 @@
       "os": "Dell PowerStore OS",
       "criticality": 10,
       "syslog_format": "auto",
-      "x": 795.0,
-      "y": 348.0,
+      "x": 700.0,
+      "y": 50.0,
       "verified": true,
       "open_ports": [
         443,
@@ -347,8 +307,8 @@
       "os": "Windows 11 Pro Admin",
       "criticality": 7,
       "syslog_format": "auto",
-      "x": 874.0,
-      "y": 146.0,
+      "x": 900.0,
+      "y": 50.0,
       "verified": true,
       "open_ports": [
         22,
@@ -366,8 +326,8 @@
       "os": "Cisco IOS-XE",
       "criticality": 6,
       "syslog_format": "auto",
-      "x": -167.0,
-      "y": 572.0,
+      "x": 0.0,
+      "y": -150.0,
       "verified": true,
       "open_ports": [
         22,
@@ -385,8 +345,8 @@
       "os": "Windows 11 Enterprise",
       "criticality": 4,
       "syslog_format": "auto",
-      "x": -455.0,
-      "y": 1165.0,
+      "x": -500.0,
+      "y": 250.0,
       "verified": true,
       "open_ports": [
         135,
@@ -404,8 +364,8 @@
       "os": "Windows 11 Enterprise",
       "criticality": 4,
       "syslog_format": "auto",
-      "x": -220.0,
-      "y": 1145.0,
+      "x": -300.0,
+      "y": 250.0,
       "verified": true,
       "open_ports": [
         135,
@@ -423,8 +383,8 @@
       "os": "Windows 11 Enterprise",
       "criticality": 4,
       "syslog_format": "auto",
-      "x": 7.0,
-      "y": 1144.0,
+      "x": -100.0,
+      "y": 250.0,
       "verified": true,
       "open_ports": [
         135,
@@ -442,8 +402,8 @@
       "os": "Windows 11 Enterprise",
       "criticality": 4,
       "syslog_format": "auto",
-      "x": 298.0,
-      "y": 1143.0,
+      "x": 100.0,
+      "y": 250.0,
       "verified": true,
       "open_ports": [
         135,
@@ -461,8 +421,8 @@
       "os": "Windows 11 Enterprise",
       "criticality": 4,
       "syslog_format": "auto",
-      "x": 545.0,
-      "y": 1140.0,
+      "x": 300.0,
+      "y": 250.0,
       "verified": true,
       "open_ports": [
         135,
@@ -480,8 +440,8 @@
       "os": "Windows 11 Enterprise",
       "criticality": 4,
       "syslog_format": "auto",
-      "x": 772.0,
-      "y": 1155.0,
+      "x": 500.0,
+      "y": 250.0,
       "verified": true,
       "open_ports": [
         135,
@@ -499,8 +459,8 @@
       "os": "FortiOS 7.2 (DR Site)",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": -1448.0,
-      "y": -474.0,
+      "x": -1300.0,
+      "y": -550.0,
       "verified": true,
       "open_ports": [
         22,
@@ -520,8 +480,8 @@
       "os": "Cisco IOS-XE",
       "criticality": 7,
       "syslog_format": "auto",
-      "x": -1448.0,
-      "y": -163.0,
+      "x": -1300.0,
+      "y": -350.0,
       "verified": true,
       "open_ports": [
         22,
@@ -539,8 +499,8 @@
       "os": "QuTS hero OS (DR NAS)",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": -1607.0,
-      "y": 69.0,
+      "x": -1420.0,
+      "y": -150.0,
       "verified": true,
       "open_ports": [
         443,
@@ -558,8 +518,8 @@
       "os": "VMware ESXi 8.0 (DR Host)",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": -1311.0,
-      "y": 58.0,
+      "x": -1180.0,
+      "y": -150.0,
       "verified": true,
       "open_ports": [
         22,
@@ -578,8 +538,8 @@
       "os": "FortiOS 7.2 (Branch 1 SD-WAN)",
       "criticality": 7,
       "syslog_format": "auto",
-      "x": 1434.0,
-      "y": -288.0,
+      "x": 1300.0,
+      "y": -550.0,
       "verified": true,
       "open_ports": [
         22,
@@ -599,8 +559,8 @@
       "os": "FortiSwitchOS",
       "criticality": 6,
       "syslog_format": "auto",
-      "x": 1430.0,
-      "y": -110.0,
+      "x": 1300.0,
+      "y": -350.0,
       "verified": true,
       "open_ports": [
         22,
@@ -618,8 +578,8 @@
       "os": "FortiAP OS",
       "criticality": 5,
       "syslog_format": "auto",
-      "x": 1365.0,
-      "y": 83.0,
+      "x": 1200.0,
+      "y": -150.0,
       "verified": true,
       "open_ports": [
         80,
@@ -637,8 +597,8 @@
       "os": "Windows 11 Branch 1",
       "criticality": 4,
       "syslog_format": "auto",
-      "x": 1552.0,
-      "y": 86.0,
+      "x": 1400.0,
+      "y": -150.0,
       "verified": true,
       "open_ports": [
         135,
@@ -656,8 +616,8 @@
       "os": "FortiOS 7.2 (Branch 2 SD-WAN)",
       "criticality": 7,
       "syslog_format": "auto",
-      "x": 1899.0,
-      "y": -491.0,
+      "x": 1700.0,
+      "y": -550.0,
       "verified": true,
       "open_ports": [
         22,
@@ -677,8 +637,8 @@
       "os": "FortiSwitchOS",
       "criticality": 6,
       "syslog_format": "auto",
-      "x": 1899.0,
-      "y": -299.0,
+      "x": 1700.0,
+      "y": -350.0,
       "verified": true,
       "open_ports": [
         22,
@@ -696,8 +656,8 @@
       "os": "FortiAP OS",
       "criticality": 5,
       "syslog_format": "auto",
-      "x": 1789.0,
-      "y": -87.0,
+      "x": 1600.0,
+      "y": -150.0,
       "verified": true,
       "open_ports": [
         80,
@@ -715,8 +675,8 @@
       "os": "Windows 11 Branch 2",
       "criticality": 4,
       "syslog_format": "auto",
-      "x": 2032.0,
-      "y": -117.0,
+      "x": 1800.0,
+      "y": -150.0,
       "verified": true,
       "open_ports": [
         135,
@@ -734,13 +694,36 @@
       "os": "Linux",
       "criticality": 5,
       "syslog_format": "auto",
-      "x": 221.0,
-      "y": 555.0,
+      "x": 800.0,
+      "y": -150.0,
       "verified": true,
       "open_ports": [
         22,
         80,
         443
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_wazuh_vm",
+      "name": "Wazuh-Manager-VMware",
+      "ip": "172.16.175.145",
+      "secondary_ip": null,
+      "type": "wazuh",
+      "os": "Wazuh SIEM Server 4.14.7 (VMware)",
+      "criticality": 10,
+      "syslog_format": "auto",
+      "x": 300.0,
+      "y": 50.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        443,
+        514,
+        1514,
+        1515,
+        55000
       ],
       "ha_group": null,
       "vpn_tunnel": null
@@ -836,30 +819,6 @@
       "link_type": "ethernet"
     },
     {
-      "id": "link_spine1_core1",
-      "from_id": "dev_dc_spine1",
-      "to_id": "dev_dc_core1",
-      "label": "40G Fabric Link",
-      "bandwidth": "40G",
-      "link_type": "ethernet"
-    },
-    {
-      "id": "link_spine2_core2",
-      "from_id": "dev_dc_spine2",
-      "to_id": "dev_dc_core2",
-      "label": "40G Fabric Link",
-      "bandwidth": "40G",
-      "link_type": "ethernet"
-    },
-    {
-      "id": "link_core_stack",
-      "from_id": "dev_dc_core1",
-      "to_id": "dev_dc_core2",
-      "label": "Core StackWise 480G",
-      "bandwidth": "40G",
-      "link_type": "ethernet"
-    },
-    {
       "id": "link_dmz_trunk",
       "from_id": "dev_dc_spine1",
       "to_id": "dev_dmz_sw",
@@ -945,14 +904,6 @@
       "to_id": "dev_mgmt_pc",
       "label": "1G Admin Link",
       "bandwidth": "1G",
-      "link_type": "ethernet"
-    },
-    {
-      "id": "link_access_uplink",
-      "from_id": "dev_dc_core1",
-      "to_id": "dev_dept_sw",
-      "label": "Uplink 10G Trunk",
-      "bandwidth": "10G",
       "link_type": "ethernet"
     },
     {
@@ -1137,6 +1088,14 @@
       "to_id": "dev_dc_spine1",
       "label": "1Gbps Link",
       "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_wazuh_internal",
+      "from_id": "dev_internal_sw",
+      "to_id": "dev_wazuh_vm",
+      "label": "SIEM Syslog Collector 10G",
+      "bandwidth": "10G",
       "link_type": "ethernet"
     }
   ],
