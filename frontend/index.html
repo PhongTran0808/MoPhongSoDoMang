@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WazuhSim — Network Topology Designer &amp; Log Injector</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- vis-network library -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+
+    <!-- App Header -->
+    <header class="app-header">
+        <div class="brand">
+            <i class="fa-solid fa-network-wired" style="font-size:1.4rem; color:var(--accent-cyan);"></i>
+            <div>
+                <h1>WazuhSim — Topology Designer &amp; Log Injector</h1>
+                <p>Giả lập sơ đồ mạng siêu nhẹ &amp; Bắn log Syslog UDP 514 tới Wazuh Manager THẬT (172.16.175.145)</p>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn-action btn-success" onclick="exportToAgentWazuhAction()">
+                <i class="fa-solid fa-file-export"></i> ⚡ 1-Click Export sang AgentWazuh
+            </button>
+            <button class="btn-action btn-primary" onclick="initCanvas()">
+                <i class="fa-solid fa-arrows-rotate"></i> Tải Lại
+            </button>
+        </div>
+    </header>
+
+    <!-- Designer Toolbar -->
+    <div class="designer-toolbar">
+        <div class="toolbar-group">
+            <span style="font-size:0.75rem; font-weight:700; color:var(--text-muted);">THÊM THIẾT BỊ:</span>
+            <button class="btn-action" onclick="addNewDevice('firewall')"><i class="fa-solid fa-shield-halved" style="color:#f97316;"></i> + Firewall</button>
+            <button class="btn-action" onclick="addNewDevice('router')"><i class="fa-solid fa-network-wired" style="color:#38bdf8;"></i> + Router</button>
+            <button class="btn-action" onclick="addNewDevice('switch')"><i class="fa-solid fa-code-branch" style="color:#a78bfa;"></i> + Switch</button>
+            <button class="btn-action" onclick="addNewDevice('server')"><i class="fa-solid fa-server" style="color:#34d399;"></i> + Server</button>
+            <button class="btn-action" onclick="addNewDevice('pc')"><i class="fa-solid fa-laptop" style="color:#60a5fa;"></i> + Endpoint PC</button>
+            <button class="btn-action" onclick="addNewDevice('cloud')"><i class="fa-solid fa-cloud" style="color:#38bdf8;"></i> + Cloud / WAN</button>
+        </div>
+        <div class="toolbar-group" style="border-right:none;">
+            <button class="btn-action btn-primary" onclick="openConnectModal()">
+                <i class="fa-solid fa-link"></i> 🔗 Nối Dây Mạng (Connect Devices)
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal Nối Dây Mạng -->
+    <div id="connect-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.75); align-items:center; justify-content:center; z-index:9999;">
+        <div class="modal-card" style="background:#0f172a; border:1px solid #1e293b; border-radius:12px; padding:1.5rem; width:450px; color:#fff;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid #1e293b; padding-bottom:0.6rem;">
+                <h3 style="font-size:1.05rem; color:#38bdf8;"><i class="fa-solid fa-link"></i> 🔗 Nối Dây Giữa 2 Thiết Bị</h3>
+                <button class="btn-action" onclick="closeConnectModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="form-group" style="margin-bottom:0.8rem;">
+                <label>Thiết Bị Nguồn (From)</label>
+                <select id="modal-conn-from" class="form-control"></select>
+            </div>
+            <div class="form-group" style="margin-bottom:0.8rem;">
+                <label>Thiết Bị Đích (To)</label>
+                <select id="modal-conn-to" class="form-control"></select>
+            </div>
+            <div class="form-group" style="margin-bottom:1.2rem;">
+                <label>Tên / Tốc Độ Đường Nối (Label)</label>
+                <input type="text" id="modal-conn-label" value="1Gbps LAN Link" class="form-control">
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:0.6rem;">
+                <button class="btn-action" onclick="closeConnectModal()">Hủy</button>
+                <button class="btn-action btn-primary" onclick="submitConnectModal()">⚡ Cắm Dây Ngay</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Layout -->
+    <main class="main-layout">
+        <!-- Canvas Pane -->
+        <div id="canvas-pane" class="canvas-container"></div>
+
+        <!-- Right Property Panel -->
+        <aside class="prop-panel">
+            <div class="panel-header">
+                <i class="fa-solid fa-sliders"></i> Thông Số Thiết Bị
+            </div>
+            <div id="prop-panel-body" class="panel-body">
+                <div class="empty-prop">
+                    <i class="fa-solid fa-hand-pointer" style="font-size:2rem; color:#475569;"></i>
+                    <p>Nhấp vào thiết bị trên sơ đồ để chỉnh sửa IP, Tên, loại log Syslog.</p>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Bottom Scenario Launcher Bar -->
+    <div class="scenario-bar">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div style="font-size:0.85rem; font-weight:700; color:var(--accent-cyan); display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid fa-crosshairs"></i> BỘ KÍCH HOẠT KỊCH BẢN TẤN CÔNG GIẢ LẬP (LOG INJECTOR ENGINE)
+            </div>
+            <span class="badge-info">Target: Syslog UDP 514</span>
+        </div>
+
+        <div class="scenario-controls">
+            <div class="form-group" style="flex:2;">
+                <label>Kịch Bản Tấn Công</label>
+                <select id="select-scenario" class="form-control"></select>
+            </div>
+
+            <div class="form-group" style="flex:1.2;">
+                <label>Nguồn Tấn Công (Src)</label>
+                <select id="select-src-device" class="form-control"></select>
+            </div>
+
+            <div class="form-group" style="flex:1.2;">
+                <label>Mục Tiêu (Target)</label>
+                <select id="select-target-device" class="form-control"></select>
+            </div>
+
+            <div class="form-group" style="flex:1.2;">
+                <label>IP Wazuh Server</label>
+                <input type="text" id="input-wazuh-ip" value="172.16.175.145" class="form-control">
+            </div>
+
+            <div style="display:flex; gap:0.4rem; align-self:flex-end;">
+                <button class="btn-action btn-primary" style="background:#ef4444; border-color:#dc2626;" onclick="triggerScenarioAction()">
+                    <i class="fa-solid fa-play"></i> BẮT ĐẦU
+                </button>
+                <button class="btn-action" onclick="stopScenarioAction()">
+                    <i class="fa-solid fa-stop"></i> Dừng
+                </button>
+            </div>
+        </div>
+
+        <div id="scenario-status-log" class="scenario-status-box">
+            [Trạng thái Idle] Chưa kích hoạt kịch bản. Sẵn sàng bắn log Syslog UDP 514 tới Wazuh Manager thật.
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/canvas.js"></script>
+    <script src="/static/js/panels.js"></script>
+    <script src="/static/js/scenario.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            await loadScenariosList();
+            await initCanvas();
+        });
+    </script>
+</body>
+</html>

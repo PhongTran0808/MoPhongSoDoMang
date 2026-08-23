@@ -1,0 +1,1179 @@
+{
+  "devices": [
+    {
+      "id": "dev_cloud_wan",
+      "name": "WAN-Internet-Cloud",
+      "ip": "8.8.8.8",
+      "secondary_ip": null,
+      "type": "cloud",
+      "os": "Public WAN Cloud",
+      "criticality": 2,
+      "syslog_format": "auto",
+      "x": 3.0,
+      "y": -515.0,
+      "verified": true,
+      "open_ports": [
+        80,
+        443,
+        53
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dc_fg600f_1",
+      "name": "DC-FortiGate-600F-Pri",
+      "ip": "172.16.175.200",
+      "secondary_ip": "172.16.175.201",
+      "type": "firewall",
+      "os": "FortiOS 7.2 (HA Active)",
+      "criticality": 10,
+      "syslog_format": "auto",
+      "x": -125.0,
+      "y": -238.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80,
+        443,
+        500,
+        4500
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dc_fg600f_2",
+      "name": "DC-FortiGate-600F-Sec",
+      "ip": "172.16.175.201",
+      "secondary_ip": null,
+      "type": "firewall",
+      "os": "FortiOS 7.2 (HA Standby)",
+      "criticality": 9,
+      "syslog_format": "auto",
+      "x": 146.0,
+      "y": -298.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80,
+        443
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dc_spine1",
+      "name": "Nexus-93180-Spine1",
+      "ip": "172.16.175.202",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "Cisco NX-OS",
+      "criticality": 9,
+      "syslog_format": "auto",
+      "x": -128.0,
+      "y": 128.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80,
+        443
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dc_spine2",
+      "name": "Nexus-93180-Spine2",
+      "ip": "172.16.175.203",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "Cisco NX-OS",
+      "criticality": 9,
+      "syslog_format": "auto",
+      "x": 178.0,
+      "y": 132.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80,
+        443
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dc_core1",
+      "name": "Catalyst-9300-Core1",
+      "ip": "172.16.175.204",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "Cisco IOS-XE",
+      "criticality": 8,
+      "syslog_format": "auto",
+      "x": -173.0,
+      "y": 446.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80,
+        443
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dc_core2",
+      "name": "Catalyst-9300-Core2",
+      "ip": "172.16.175.205",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "Cisco IOS-XE",
+      "criticality": 8,
+      "syslog_format": "auto",
+      "x": 224.0,
+      "y": 432.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80,
+        443
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dmz_sw",
+      "name": "Catalyst-9300L-DMZ",
+      "ip": "172.16.175.209",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "Cisco IOS-XE",
+      "criticality": 7,
+      "syslog_format": "auto",
+      "x": -457.0,
+      "y": -33.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80,
+        443
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dmz_srv1",
+      "name": "DMZ-Server-Main",
+      "ip": "172.16.175.210",
+      "secondary_ip": null,
+      "type": "server",
+      "os": "Ubuntu 22.04 LTS (Nginx)",
+      "criticality": 8,
+      "syslog_format": "auto",
+      "x": -668.0,
+      "y": -56.0,
+      "verified": true,
+      "open_ports": [
+        80,
+        443,
+        22
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dmz_srv2",
+      "name": "DMZ-Server-Backup",
+      "ip": "172.16.175.211",
+      "secondary_ip": null,
+      "type": "server",
+      "os": "Ubuntu 22.04 LTS",
+      "criticality": 7,
+      "syslog_format": "auto",
+      "x": -661.0,
+      "y": 158.0,
+      "verified": true,
+      "open_ports": [
+        80,
+        443,
+        22
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_infra_sw",
+      "name": "Catalyst-9200CX-Infra",
+      "ip": "172.16.175.219",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "Cisco IOS-XE",
+      "criticality": 7,
+      "syslog_format": "auto",
+      "x": -851.0,
+      "y": 554.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_infra_dns",
+      "name": "DNS-Server",
+      "ip": "172.16.175.220",
+      "secondary_ip": null,
+      "type": "server",
+      "os": "Windows Server 2022 (DNS)",
+      "criticality": 9,
+      "syslog_format": "auto",
+      "x": -1067.0,
+      "y": 830.0,
+      "verified": true,
+      "open_ports": [
+        53,
+        5353
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_infra_dhcp",
+      "name": "DHCP-Server",
+      "ip": "172.16.175.221",
+      "secondary_ip": null,
+      "type": "server",
+      "os": "Windows Server 2022 (DHCP)",
+      "criticality": 9,
+      "syslog_format": "auto",
+      "x": -869.0,
+      "y": 829.0,
+      "verified": true,
+      "open_ports": [
+        67,
+        68
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_infra_r700",
+      "name": "Dell-PowerEdge-R700",
+      "ip": "172.16.175.222",
+      "secondary_ip": null,
+      "type": "server",
+      "os": "Linux RHEL 9",
+      "criticality": 8,
+      "syslog_format": "auto",
+      "x": -651.0,
+      "y": 805.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        443
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_internal_sw",
+      "name": "Catalyst-9300-Internal",
+      "ip": "172.16.175.229",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "Cisco IOS-XE",
+      "criticality": 8,
+      "syslog_format": "auto",
+      "x": 457.0,
+      "y": 31.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_mgmt_prtg",
+      "name": "PowerEdge-R760xa-PRTG",
+      "ip": "172.16.175.230",
+      "secondary_ip": null,
+      "type": "server",
+      "os": "RedHat Enterprise 9",
+      "criticality": 9,
+      "syslog_format": "auto",
+      "x": 812.0,
+      "y": -58.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80,
+        443,
+        161
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_mgmt_san",
+      "name": "SAN-Dell-PowerStore",
+      "ip": "172.16.175.231",
+      "secondary_ip": null,
+      "type": "server",
+      "os": "Dell PowerStore OS",
+      "criticality": 10,
+      "syslog_format": "auto",
+      "x": 795.0,
+      "y": 348.0,
+      "verified": true,
+      "open_ports": [
+        443,
+        3260,
+        8443
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_mgmt_pc",
+      "name": "Manager-Admin-PC",
+      "ip": "172.16.175.232",
+      "secondary_ip": null,
+      "type": "pc",
+      "os": "Windows 11 Pro Admin",
+      "criticality": 7,
+      "syslog_format": "auto",
+      "x": 874.0,
+      "y": 146.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        3389
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dept_sw",
+      "name": "Catalyst-9200L-PoE-Core",
+      "ip": "172.16.175.240",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "Cisco IOS-XE",
+      "criticality": 6,
+      "syslog_format": "auto",
+      "x": -167.0,
+      "y": 572.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_pc_pb1",
+      "name": "PC-PB1-VLAN10",
+      "ip": "172.16.175.241",
+      "secondary_ip": null,
+      "type": "pc",
+      "os": "Windows 11 Enterprise",
+      "criticality": 4,
+      "syslog_format": "auto",
+      "x": -455.0,
+      "y": 1165.0,
+      "verified": true,
+      "open_ports": [
+        135,
+        445
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_pc_pb2",
+      "name": "PC-PB2-VLAN20",
+      "ip": "172.16.175.242",
+      "secondary_ip": null,
+      "type": "pc",
+      "os": "Windows 11 Enterprise",
+      "criticality": 4,
+      "syslog_format": "auto",
+      "x": -220.0,
+      "y": 1145.0,
+      "verified": true,
+      "open_ports": [
+        135,
+        445
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_pc_pb3",
+      "name": "PC-PB3-VLAN30",
+      "ip": "172.16.175.243",
+      "secondary_ip": null,
+      "type": "pc",
+      "os": "Windows 11 Enterprise",
+      "criticality": 4,
+      "syslog_format": "auto",
+      "x": 7.0,
+      "y": 1144.0,
+      "verified": true,
+      "open_ports": [
+        135,
+        445
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_pc_pb4",
+      "name": "PC-PB4-VLAN40",
+      "ip": "172.16.175.244",
+      "secondary_ip": null,
+      "type": "pc",
+      "os": "Windows 11 Enterprise",
+      "criticality": 4,
+      "syslog_format": "auto",
+      "x": 298.0,
+      "y": 1143.0,
+      "verified": true,
+      "open_ports": [
+        135,
+        445
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_pc_pb5",
+      "name": "PC-PB5-VLAN50",
+      "ip": "172.16.175.245",
+      "secondary_ip": null,
+      "type": "pc",
+      "os": "Windows 11 Enterprise",
+      "criticality": 4,
+      "syslog_format": "auto",
+      "x": 545.0,
+      "y": 1140.0,
+      "verified": true,
+      "open_ports": [
+        135,
+        445
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_pc_pb6",
+      "name": "PC-PB6-VLAN60",
+      "ip": "172.16.175.246",
+      "secondary_ip": null,
+      "type": "pc",
+      "os": "Windows 11 Enterprise",
+      "criticality": 4,
+      "syslog_format": "auto",
+      "x": 772.0,
+      "y": 1155.0,
+      "verified": true,
+      "open_ports": [
+        135,
+        445
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dr_fg400f",
+      "name": "DR-FortiGate-400F",
+      "ip": "172.16.175.250",
+      "secondary_ip": null,
+      "type": "firewall",
+      "os": "FortiOS 7.2 (DR Site)",
+      "criticality": 9,
+      "syslog_format": "auto",
+      "x": -1448.0,
+      "y": -474.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80,
+        443,
+        500
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dr_sw",
+      "name": "Catalyst-9200L-DR",
+      "ip": "172.16.175.253",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "Cisco IOS-XE",
+      "criticality": 7,
+      "syslog_format": "auto",
+      "x": -1448.0,
+      "y": -163.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dr_qnap",
+      "name": "QNAP-SAN-h1290FX",
+      "ip": "172.16.175.251",
+      "secondary_ip": null,
+      "type": "server",
+      "os": "QuTS hero OS (DR NAS)",
+      "criticality": 9,
+      "syslog_format": "auto",
+      "x": -1607.0,
+      "y": 69.0,
+      "verified": true,
+      "open_ports": [
+        443,
+        3260
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_dr_dell",
+      "name": "Dell-R760-DR",
+      "ip": "172.16.175.252",
+      "secondary_ip": null,
+      "type": "server",
+      "os": "VMware ESXi 8.0 (DR Host)",
+      "criticality": 9,
+      "syslog_format": "auto",
+      "x": -1311.0,
+      "y": 58.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        443,
+        902
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_br1_fg60f",
+      "name": "Br1-FortiGate-60F",
+      "ip": "192.168.10.1",
+      "secondary_ip": null,
+      "type": "firewall",
+      "os": "FortiOS 7.2 (Branch 1 SD-WAN)",
+      "criticality": 7,
+      "syslog_format": "auto",
+      "x": 1434.0,
+      "y": -288.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80,
+        443,
+        500
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_br1_switch",
+      "name": "Br1-FortiSwitch-148F",
+      "ip": "192.168.10.2",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "FortiSwitchOS",
+      "criticality": 6,
+      "syslog_format": "auto",
+      "x": 1430.0,
+      "y": -110.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_br1_ap",
+      "name": "Br1-FortiAP-231F",
+      "ip": "192.168.10.10",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "FortiAP OS",
+      "criticality": 5,
+      "syslog_format": "auto",
+      "x": 1365.0,
+      "y": 83.0,
+      "verified": true,
+      "open_ports": [
+        80,
+        443
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_br1_pc",
+      "name": "Br1-User-PC",
+      "ip": "192.168.10.100",
+      "secondary_ip": null,
+      "type": "pc",
+      "os": "Windows 11 Branch 1",
+      "criticality": 4,
+      "syslog_format": "auto",
+      "x": 1552.0,
+      "y": 86.0,
+      "verified": true,
+      "open_ports": [
+        135,
+        445
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_br2_fg50f",
+      "name": "Br2-FortiGate-50F",
+      "ip": "192.168.20.1",
+      "secondary_ip": null,
+      "type": "firewall",
+      "os": "FortiOS 7.2 (Branch 2 SD-WAN)",
+      "criticality": 7,
+      "syslog_format": "auto",
+      "x": 1899.0,
+      "y": -491.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80,
+        443,
+        500
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_br2_switch",
+      "name": "Br2-FortiSwitch-148F",
+      "ip": "192.168.20.2",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "FortiSwitchOS",
+      "criticality": 6,
+      "syslog_format": "auto",
+      "x": 1899.0,
+      "y": -299.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_br2_ap",
+      "name": "Br2-FortiAP-231F",
+      "ip": "192.168.20.10",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "FortiAP OS",
+      "criticality": 5,
+      "syslog_format": "auto",
+      "x": 1789.0,
+      "y": -87.0,
+      "verified": true,
+      "open_ports": [
+        80,
+        443
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_br2_pc",
+      "name": "Br2-User-PC",
+      "ip": "192.168.20.100",
+      "secondary_ip": null,
+      "type": "pc",
+      "os": "Windows 11 Branch 2",
+      "criticality": 4,
+      "syslog_format": "auto",
+      "x": 2032.0,
+      "y": -117.0,
+      "verified": true,
+      "open_ports": [
+        135,
+        445
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    },
+    {
+      "id": "dev_9947ml",
+      "name": "SWITCH-38",
+      "ip": "172.16.175.238",
+      "secondary_ip": null,
+      "type": "switch",
+      "os": "Linux",
+      "criticality": 5,
+      "syslog_format": "auto",
+      "x": 221.0,
+      "y": 555.0,
+      "verified": true,
+      "open_ports": [
+        22,
+        80,
+        443
+      ],
+      "ha_group": null,
+      "vpn_tunnel": null
+    }
+  ],
+  "links": [
+    {
+      "id": "link_wan_fg_dc",
+      "from_id": "dev_cloud_wan",
+      "to_id": "dev_dc_fg600f_1",
+      "label": "SD-WAN Dual ISP 1Gbps",
+      "bandwidth": "1G",
+      "link_type": "vpn"
+    },
+    {
+      "id": "link_wan_br1",
+      "from_id": "dev_cloud_wan",
+      "to_id": "dev_br1_fg60f",
+      "label": "Branch 1 WAN Direct",
+      "bandwidth": "100M",
+      "link_type": "vpn"
+    },
+    {
+      "id": "link_wan_br2",
+      "from_id": "dev_cloud_wan",
+      "to_id": "dev_br2_fg50f",
+      "label": "Branch 2 WAN Direct",
+      "bandwidth": "100M",
+      "link_type": "vpn"
+    },
+    {
+      "id": "link_dr_ipsec",
+      "from_id": "dev_dr_fg400f",
+      "to_id": "dev_dc_fg600f_1",
+      "label": "IPsec VPN Tunnel DR ↔ DC",
+      "bandwidth": "1G",
+      "link_type": "vpn"
+    },
+    {
+      "id": "link_dr_sw",
+      "from_id": "dev_dr_fg400f",
+      "to_id": "dev_dr_sw",
+      "label": "DR Internal Trunk",
+      "bandwidth": "10G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_dr_qnap",
+      "from_id": "dev_dr_sw",
+      "to_id": "dev_dr_qnap",
+      "label": "10G iSCSI SAN",
+      "bandwidth": "10G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_dr_dell",
+      "from_id": "dev_dr_sw",
+      "to_id": "dev_dr_dell",
+      "label": "10G Host Uplink",
+      "bandwidth": "10G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_ha_sync",
+      "from_id": "dev_dc_fg600f_1",
+      "to_id": "dev_dc_fg600f_2",
+      "label": "HA Heartbeat HB1/HB2",
+      "bandwidth": "10G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_fg1_spine1",
+      "from_id": "dev_dc_fg600f_1",
+      "to_id": "dev_dc_spine1",
+      "label": "10G Uplink Primary",
+      "bandwidth": "10G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_fg2_spine2",
+      "from_id": "dev_dc_fg600f_2",
+      "to_id": "dev_dc_spine2",
+      "label": "10G Uplink Secondary",
+      "bandwidth": "10G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_spine_peer",
+      "from_id": "dev_dc_spine1",
+      "to_id": "dev_dc_spine2",
+      "label": "vPC Peer-Link 40G",
+      "bandwidth": "40G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_spine1_core1",
+      "from_id": "dev_dc_spine1",
+      "to_id": "dev_dc_core1",
+      "label": "40G Fabric Link",
+      "bandwidth": "40G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_spine2_core2",
+      "from_id": "dev_dc_spine2",
+      "to_id": "dev_dc_core2",
+      "label": "40G Fabric Link",
+      "bandwidth": "40G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_core_stack",
+      "from_id": "dev_dc_core1",
+      "to_id": "dev_dc_core2",
+      "label": "Core StackWise 480G",
+      "bandwidth": "40G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_dmz_trunk",
+      "from_id": "dev_dc_spine1",
+      "to_id": "dev_dmz_sw",
+      "label": "DMZ Trunk 10G",
+      "bandwidth": "10G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_dmz_srv1",
+      "from_id": "dev_dmz_sw",
+      "to_id": "dev_dmz_srv1",
+      "label": "1G Web Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_dmz_srv2",
+      "from_id": "dev_dmz_sw",
+      "to_id": "dev_dmz_srv2",
+      "label": "1G Backup Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_infra_trunk",
+      "from_id": "dev_dc_spine1",
+      "to_id": "dev_infra_sw",
+      "label": "Infra Trunk 10G",
+      "bandwidth": "10G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_infra_dns",
+      "from_id": "dev_infra_sw",
+      "to_id": "dev_infra_dns",
+      "label": "1G DNS Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_infra_dhcp",
+      "from_id": "dev_infra_sw",
+      "to_id": "dev_infra_dhcp",
+      "label": "1G DHCP Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_infra_r700",
+      "from_id": "dev_infra_sw",
+      "to_id": "dev_infra_r700",
+      "label": "1G App Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_internal_trunk",
+      "from_id": "dev_dc_spine2",
+      "to_id": "dev_internal_sw",
+      "label": "Internal Trunk 10G",
+      "bandwidth": "10G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_mgmt_prtg",
+      "from_id": "dev_internal_sw",
+      "to_id": "dev_mgmt_prtg",
+      "label": "1G Mgmt Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_mgmt_san",
+      "from_id": "dev_internal_sw",
+      "to_id": "dev_mgmt_san",
+      "label": "10G iSCSI SAN",
+      "bandwidth": "10G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_mgmt_pc",
+      "from_id": "dev_internal_sw",
+      "to_id": "dev_mgmt_pc",
+      "label": "1G Admin Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_access_uplink",
+      "from_id": "dev_dc_core1",
+      "to_id": "dev_dept_sw",
+      "label": "Uplink 10G Trunk",
+      "bandwidth": "10G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_pc_pb1",
+      "from_id": "dev_dept_sw",
+      "to_id": "dev_pc_pb1",
+      "label": "VLAN10 (PB1)",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_pc_pb2",
+      "from_id": "dev_dept_sw",
+      "to_id": "dev_pc_pb2",
+      "label": "VLAN20 (PB2)",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_pc_pb3",
+      "from_id": "dev_dept_sw",
+      "to_id": "dev_pc_pb3",
+      "label": "VLAN30 (PB3)",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_br1_sw",
+      "from_id": "dev_br1_fg60f",
+      "to_id": "dev_br1_switch",
+      "label": "FortiLink 1G",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_br1_ap",
+      "from_id": "dev_br1_switch",
+      "to_id": "dev_br1_ap",
+      "label": "PoE Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_br1_pc",
+      "from_id": "dev_br1_switch",
+      "to_id": "dev_br1_pc",
+      "label": "Access Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_br2_sw",
+      "from_id": "dev_br2_fg50f",
+      "to_id": "dev_br2_switch",
+      "label": "FortiLink 1G",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_br2_ap",
+      "from_id": "dev_br2_switch",
+      "to_id": "dev_br2_ap",
+      "label": "PoE Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_br2_pc",
+      "from_id": "dev_br2_switch",
+      "to_id": "dev_br2_pc",
+      "label": "Access Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_jqstdn",
+      "from_id": "dev_dc_fg600f_2",
+      "to_id": "dev_cloud_wan",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_b8avmo",
+      "from_id": "dev_dr_fg400f",
+      "to_id": "dev_dc_fg600f_2",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_0zn77n",
+      "from_id": "dev_pc_pb4",
+      "to_id": "dev_9947ml",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_3irsk8",
+      "from_id": "dev_9947ml",
+      "to_id": "dev_pc_pb5",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_aj7f8g",
+      "from_id": "dev_9947ml",
+      "to_id": "dev_pc_pb6",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_kl5xi8",
+      "from_id": "dev_dc_spine1",
+      "to_id": "dev_dept_sw",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_96idwd",
+      "from_id": "dev_dc_spine1",
+      "to_id": "dev_9947ml",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_uu6213",
+      "from_id": "dev_dc_spine2",
+      "to_id": "dev_dept_sw",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_o35gei",
+      "from_id": "dev_dc_spine2",
+      "to_id": "dev_9947ml",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_kgxbqi",
+      "from_id": "dev_dc_fg600f_1",
+      "to_id": "dev_dc_spine2",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_3n0q5i",
+      "from_id": "dev_dc_fg600f_2",
+      "to_id": "dev_dc_spine1",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_mmbfcs",
+      "from_id": "dev_infra_sw",
+      "to_id": "dev_dc_spine2",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_7u46jg",
+      "from_id": "dev_dmz_sw",
+      "to_id": "dev_dc_spine2",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    },
+    {
+      "id": "link_ips8q9",
+      "from_id": "dev_internal_sw",
+      "to_id": "dev_dc_spine1",
+      "label": "1Gbps Link",
+      "bandwidth": "1G",
+      "link_type": "ethernet"
+    }
+  ],
+  "ha_groups": [
+    {
+      "id": "ha_fg_pair",
+      "name": "FortiGate-600F-HA-Group",
+      "primary_device_id": "dev_dc_fg600f_1",
+      "secondary_device_id": "dev_dc_fg600f_2",
+      "mode": "active-passive"
+    }
+  ],
+  "vpn_tunnels": [
+    {
+      "id": "vpn_br1",
+      "name": "IPsec-Branch1-DC",
+      "source_device_id": "dev_br1_fg60f",
+      "target_device_id": "dev_dc_fg600f_1",
+      "tunnel_type": "IPsec",
+      "status": "up"
+    },
+    {
+      "id": "vpn_br2",
+      "name": "IPsec-Branch2-DC",
+      "source_device_id": "dev_br2_fg50f",
+      "target_device_id": "dev_dc_fg600f_1",
+      "tunnel_type": "IPsec",
+      "status": "up"
+    },
+    {
+      "id": "vpn_dr",
+      "name": "IPsec-DR-DC",
+      "source_device_id": "dev_dr_fg400f",
+      "target_device_id": "dev_dc_fg600f_1",
+      "tunnel_type": "IPsec",
+      "status": "up"
+    }
+  ],
+  "last_updated": "Just now"
+}
