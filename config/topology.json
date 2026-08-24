@@ -51,8 +51,8 @@
       "os": "FortiOS 7.2 (HA Standby)",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": 176.0,
-      "y": -604.0,
+      "x": 184.0,
+      "y": -581.0,
       "verified": true,
       "open_ports": [
         22,
@@ -616,8 +616,8 @@
       "os": "FortiOS 7.2 (Branch 2 SD-WAN)",
       "criticality": 7,
       "syslog_format": "auto",
-      "x": 1694.0,
-      "y": -679.0,
+      "x": 1693.0,
+      "y": -682.0,
       "verified": true,
       "open_ports": [
         22,
