@@ -306,7 +306,18 @@ async function actionBatchCreateAllContainers() {
     if (!confirm(`🚀 Bạn có chắc muốn Khởi Tạo Docker cho TẤT CẢ các Node trong sơ đồ?\n- IP Wazuh Server Target: ${wazuhIp}\n- Mã Xác Thực: ${wazuhPass || '(Không có)'}\n- 5 Node chính sẽ ở trạng thái BẬT, các node khác ở trạng thái TẠM DỪNG (0% RAM/CPU) để bạn bật khi cần.`)) return;
 
     try {
-        const res = await API.batchCreateContainers(wazuhIp, wazuhPass);
+        let res;
+        if (typeof API !== "undefined" && typeof API.batchCreateContainers === "function") {
+            res = await API.batchCreateContainers(wazuhIp, wazuhPass);
+        } else {
+            // Fallback trực tiếp qua fetch nếu trình duyệt bị cache file api.js cũ
+            const rawRes = await fetch("/api/container/batch-create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ wazuh_manager_ip: wazuhIp, enroll_pass: wazuhPass })
+            });
+            res = await rawRes.json();
+        }
         alert(res.message);
         await initCanvas();
     } catch (e) {

@@ -6,7 +6,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 if str(BASE_DIR) not in sys.path:
     sys.path.insert(0, str(BASE_DIR))
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from backend.routes.designer_api import router as designer_router
@@ -19,8 +19,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Anti-cache middleware for static assets & JS
+@app.middleware("http")
+async def add_anti_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    return response
+
 # Base directories
-BASE_DIR = Path(__file__).resolve().parent.parent
 FRONTEND_DIR = BASE_DIR / "frontend"
 
 # Mount static files
@@ -31,11 +38,9 @@ app.include_router(designer_router)
 app.include_router(injector_router)
 app.include_router(container_router)
 
-
 @app.get("/", response_class=HTMLResponse)
 def index_page():
     return FileResponse(str(FRONTEND_DIR / "index.html"))
-
 
 if __name__ == "__main__":
     print("🚀 Starting WazuhSim Server on http://0.0.0.0:9090...")
