@@ -10,7 +10,7 @@ logger = logging.getLogger("TopologyStore")
 TOPOLOGY_FILE = Path(__file__).resolve().parent.parent.parent / "config" / "topology.json"
 
 # AgentWazuh path for 1-click export
-AGENT_WAZUH_KNOWN_DEVICES = Path("/run/media/kweismann/Dir_D/Tiểu luận CN/AgentWazuh/config/known_devices.json")
+AGENT_WAZUH_KNOWN_DEVICES = Path(__file__).resolve().parent.parent.parent.parent / "AgentWazuh" / "config" / "known_devices.json"
 
 
 def load_topology() -> TopologyData:

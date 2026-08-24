@@ -1,99 +1,100 @@
 /**
- * WazuhSim API Client Helper
+ * WazuhSim API Client Helper — Defensive & Error-Handled
  */
 const API = {
+    async _fetch(url, options = {}) {
+        try {
+            const res = await fetch(url, options);
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(`HTTP ${res.status}: ${text}`);
+            }
+            return await res.json();
+        } catch (err) {
+            console.error(`[API Error] ${url}:`, err);
+            return { status: "error", message: err.message };
+        }
+    },
+
     async getTopology() {
-        const res = await fetch("/api/topology");
-        return await res.json();
+        return await this._fetch("/api/topology");
     },
 
     async saveTopology(topo) {
-        const res = await fetch("/api/topology/save", {
+        return await this._fetch("/api/topology/save", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(topo)
         });
-        return await res.json();
     },
 
     async addDevice(device) {
-        const res = await fetch("/api/topology/device", {
+        return await this._fetch("/api/topology/device", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(device)
         });
-        return await res.json();
     },
 
     async deleteDevice(deviceId) {
-        const res = await fetch(`/api/topology/device/${deviceId}`, {
+        return await this._fetch(`/api/topology/device/${deviceId}`, {
             method: "DELETE"
         });
-        return await res.json();
     },
 
     async exportToAgentWazuh() {
-        const res = await fetch("/api/topology/export-agent-wazuh", {
+        return await this._fetch("/api/topology/export-agent-wazuh", {
             method: "POST"
         });
-        return await res.json();
     },
 
     async getScenarios() {
-        const res = await fetch("/api/injector/scenarios");
-        return await res.json();
+        return await this._fetch("/api/injector/scenarios");
     },
 
     async getInjectorStatus() {
-        const res = await fetch("/api/injector/status");
-        return await res.json();
+        return await this._fetch("/api/injector/status");
     },
 
     async runScenario(payload) {
-        const res = await fetch("/api/injector/run", {
+        return await this._fetch("/api/injector/run", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
-        return await res.json();
     },
 
     async stopScenario() {
-        const res = await fetch("/api/injector/stop", {
+        return await this._fetch("/api/injector/stop", {
             method: "POST"
         });
-        return await res.json();
     },
 
     async getContainerStatus(deviceName) {
-        const res = await fetch(`/api/container/status/${encodeURIComponent(deviceName)}`);
-        return await res.json();
+        return await this._fetch(`/api/container/status/${encodeURIComponent(deviceName)}`);
     },
 
     async createContainer(deviceName, deviceIp) {
-        const res = await fetch("/api/container/create", {
+        return await this._fetch("/api/container/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ device_name: deviceName, device_ip: deviceIp })
         });
-        return await res.json();
     },
 
     async deployAgent(deviceName, wazuhIp, deviceIp, enrollPass) {
-        const res = await fetch("/api/container/deploy-agent", {
+        return await this._fetch("/api/container/deploy-agent", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ device_name: deviceName, wazuh_manager_ip: wazuhIp, device_ip: deviceIp, enroll_pass: enrollPass })
         });
-        return await res.json();
     },
 
     async toggleContainer(deviceName, action) {
-        const res = await fetch("/api/container/toggle", {
+        return await this._fetch("/api/container/toggle", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ device_name: deviceName, action: action })
         });
-        return await res.json();
     }
 };
