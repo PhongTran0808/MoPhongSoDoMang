@@ -10,21 +10,13 @@ logger = logging.getLogger("ContainerService")
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 TOPOLOGY_JSON_PATH = BASE_DIR / "config" / "topology.json"
 
-PRIMARY_5_DEVICES = {
-    "DMZ-Server-Main",
-    "DNS-Server",
-    "Manager-Admin-PC",
-    "PC-PB1-VLAN10",
-    "Dell-R760-DR"
-}
-
 def sanitize_container_name(name: str) -> str:
     """Tạo tên container hợp lệ từ tên thiết bị."""
     sanitized = re.sub(r'[^a-zA-Z0-9_-]', '_', name)
     return f"wazuh-agent-{sanitized}"
 
 def get_container_status(device_name: str) -> Dict[str, Any]:
-    """Kiểm tra trạng thái container của thiết bị."""
+    """Kiểm tra trạng thái container của thiết bị & trạng thái deploy Wazuh Agent."""
     container_name = sanitize_container_name(device_name)
     try:
         cmd = ["docker", "inspect", container_name]
@@ -34,6 +26,7 @@ def get_container_status(device_name: str) -> Dict[str, Any]:
                 "exists": False,
                 "status": "not_created",
                 "container_name": container_name,
+                "deployed": False,
                 "wazuh_manager": None
             }
         
@@ -43,6 +36,7 @@ def get_container_status(device_name: str) -> Dict[str, Any]:
                 "exists": False,
                 "status": "not_created",
                 "container_name": container_name,
+                "deployed": False,
                 "wazuh_manager": None
             }
 
@@ -50,20 +44,31 @@ def get_container_status(device_name: str) -> Dict[str, Any]:
         running = state.get("Running", False)
         paused = state.get("Paused", False)
         
-        # Lấy IP Wazuh Manager từ env vars
+        # Kiểm tra xem agent đã được deploy/cấu hình IP Manager chưa
         env_list = data[0].get("Config", {}).get("Env", [])
-        wazuh_mgr = "172.16.175.145"
+        wazuh_mgr = None
         for env in env_list:
-            if env.startswith("WAZUH_MANAGER_SERVER="):
-                wazuh_mgr = env.split("=", 1)[1]
+            if env.startswith("WAZUH_MANAGER_SERVER=") or env.startswith("WAZUH_MANAGER="):
+                val = env.split("=", 1)[1].strip()
+                if val and val != "0.0.0.0" and val != "127.0.0.1":
+                    wazuh_mgr = val
                 break
 
         status_str = "running" if running else ("paused" if paused else "stopped")
+
+        # Kiểm tra xem file client.keys có tồn tại (đã đăng ký với manager) không
+        deployed = False
+        if running:
+            chk_cmd = ["docker", "exec", container_name, "cat", "/var/ossec/etc/client.keys"]
+            chk_res = subprocess.run(chk_cmd, capture_output=True, text=True, check=False)
+            if chk_res.returncode == 0 and chk_res.stdout.strip():
+                deployed = True
 
         return {
             "exists": True,
             "status": status_str,
             "container_name": container_name,
+            "deployed": deployed,
             "wazuh_manager": wazuh_mgr,
             "started_at": state.get("StartedAt")
         }
@@ -73,52 +78,33 @@ def get_container_status(device_name: str) -> Dict[str, Any]:
             "exists": False,
             "status": "error",
             "error": str(e),
-            "container_name": container_name
+            "container_name": container_name,
+            "deployed": False
         }
 
-def create_container(device_name: str, wazuh_manager_ip: str, device_ip: str = None, enroll_pass: str = None) -> Dict[str, Any]:
-    """Tạo và chạy Docker Container cho 1 node thiết bị với IP & Mã đăng ký khớp sơ đồ."""
+def create_container(device_name: str, device_ip: str = None) -> Dict[str, Any]:
+    """Khởi tạo Container Docker thuần (Clean OS), CHƯA gia nhập Wazuh Server."""
     container_name = sanitize_container_name(device_name)
-    wazuh_ip = wazuh_manager_ip.strip() if wazuh_manager_ip else "172.16.175.145"
 
-    # Nếu container đã tồn tại thì xóa trước để khởi tạo mới
+    # Nếu container đã tồn tại thì xóa trước để khởi tạo lại mới tinh
     subprocess.run(["docker", "rm", "-f", container_name], capture_output=True, text=True, check=False)
 
     cmd = [
         "docker", "run", "-d",
         "--name", container_name,
-        "-h", device_name[:63],  # Hostname max 63 chars
-        "-e", f"WAZUH_MANAGER_SERVER={wazuh_ip}",
+        "-h", device_name[:63],
+        "-e", "WAZUH_MANAGER_SERVER=0.0.0.0", # IP tạm rỗng, chưa kết nối
         "-e", f"WAZUH_AGENT_NAME={device_name}",
-        "--restart", "always"
+        "--restart", "always",
+        "wazuh/wazuh-agent:4.14.7"
     ]
-
-    if enroll_pass and enroll_pass.strip():
-        cmd.extend(["-e", f"WAZUH_REGISTRATION_PASSWORD={enroll_pass.strip()}"])
-
-    cmd.append("wazuh/wazuh-agent:4.14.7")
 
     try:
         res = subprocess.run(cmd, capture_output=True, text=True, check=False)
         if res.returncode == 0:
-            # Nếu có device_ip từ sơ đồ, chèn <agent_address> vào ossec.conf để Wazuh Manager nhận diện đúng IP sơ đồ
-            if device_ip and device_ip.strip():
-                import time
-                time.sleep(1.5)
-                target_ip = device_ip.strip()
-                sed_cmd = [
-                    "docker", "exec", container_name,
-                    "sed", "-i",
-                    f"s#<agent_name>{device_name}</agent_name>#<agent_name>{device_name}</agent_name>\\n      <agent_address>{target_ip}</agent_address>#g",
-                    "/var/ossec/etc/ossec.conf"
-                ]
-                subprocess.run(sed_cmd, capture_output=True, text=True, check=False)
-                # Restart wazuh agent daemon inside container to pick up new config
-                subprocess.run(["docker", "exec", container_name, "/var/ossec/bin/wazuh-control", "restart"], capture_output=True, text=True, check=False)
-
             return {
                 "status": "success",
-                "message": f"🟢 Đã khởi tạo Container {container_name} (IP: {device_ip or 'Auto'}) kết nối tới Wazuh Manager {wazuh_ip}",
+                "message": f"🟢 Đã khởi tạo Docker Container {container_name} (Hệ điều hành ảo sẵn sàng). Container CHƯA đăng ký vào Wazuh Server.",
                 "container_id": res.stdout.strip()[:12]
             }
         else:
@@ -129,13 +115,67 @@ def create_container(device_name: str, wazuh_manager_ip: str, device_ip: str = N
     except Exception as e:
         return {"status": "error", "message": f"🔴 Lỗi thực thi Docker: {str(e)}"}
 
+def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: str = None, enroll_pass: str = None) -> Dict[str, Any]:
+    """Thực thi Lệnh Deploy Agent từ Wazuh Server vào bên trong Container."""
+    container_name = sanitize_container_name(device_name)
+    wazuh_ip = wazuh_manager_ip.strip() if wazuh_manager_ip else "192.168.1.234"
+
+    # Kiểm tra container đã chạy chưa, nếu chưa thì tạo container trước
+    st = get_container_status(device_name)
+    if not st.get("exists") or st.get("status") != "running":
+        create_res = create_container(device_name, device_ip)
+        if create_res.get("status") == "error":
+            return create_res
+
+    import time
+    time.sleep(1.0)
+
+    try:
+        # Cấu hình IP Wazuh Manager vào ossec.conf bên trong container
+        sed_ip_cmd = [
+            "docker", "exec", container_name,
+            "sed", "-i",
+            f"s#<address>.*</address>#<address>{wazuh_ip}</address>#g",
+            "/var/ossec/etc/ossec.conf"
+        ]
+        subprocess.run(sed_ip_cmd, capture_output=True, text=True, check=False)
+
+        # Nếu có device_ip từ sơ đồ, chèn <agent_address>
+        if device_ip and device_ip.strip():
+            target_ip = device_ip.strip()
+            sed_addr_cmd = [
+                "docker", "exec", container_name,
+                "sed", "-i",
+                f"s#<agent_name>{device_name}</agent_name>#<agent_name>{device_name}</agent_name>\\n      <agent_address>{target_ip}</agent_address>#g",
+                "/var/ossec/etc/ossec.conf"
+            ]
+            subprocess.run(sed_addr_cmd, capture_output=True, text=True, check=False)
+
+        # Thực thi Đăng ký (Enrollment) qua agent-auth
+        auth_cmd = ["docker", "exec", container_name, "/var/ossec/bin/agent-auth", "-m", wazuh_ip, "-A", device_name]
+        if enroll_pass and enroll_pass.strip():
+            auth_cmd.extend(["-P", enroll_pass.strip()])
+
+        auth_res = subprocess.run(auth_cmd, capture_output=True, text=True, check=False)
+
+        # Restart wazuh-agent daemon trong container
+        subprocess.run(["docker", "exec", container_name, "/var/ossec/bin/wazuh-control", "restart"], capture_output=True, text=True, check=False)
+
+        return {
+            "status": "success",
+            "message": f"🚀 ĐÃ DEPLOY THÀNH CÔNG! Node '{device_name}' đã thực thi lệnh đăng ký và nhập vào Wazuh Server ({wazuh_ip})!",
+            "auth_output": auth_res.stdout.strip() or auth_res.stderr.strip()
+        }
+    except Exception as e:
+        return {"status": "error", "message": f"🔴 Lỗi thực thi Deploy Agent: {str(e)}"}
+
 def toggle_container(device_name: str, action: str) -> Dict[str, Any]:
     """Bật (start), Tạm dừng (stop) hoặc Xóa (remove) container."""
     container_name = sanitize_container_name(device_name)
     
     if action == "start":
         cmd = ["docker", "start", container_name]
-        msg_ok = f"🟢 Đã bật container {container_name} (Hoạt động)"
+        msg_ok = f"🟢 Đã bật container {container_name}"
     elif action == "stop":
         cmd = ["docker", "stop", container_name]
         msg_ok = f"⏸️ Đã tạm dừng container {container_name}"
@@ -153,43 +193,3 @@ def toggle_container(device_name: str, action: str) -> Dict[str, Any]:
             return {"status": "error", "message": f"Lỗi Docker: {res.stderr.strip()}"}
     except Exception as e:
         return {"status": "error", "message": str(e)}
-
-def batch_create_all_containers(wazuh_manager_ip: str, enroll_pass: str = None) -> Dict[str, Any]:
-    """Khởi tạo toàn bộ Container cho tất cả node trong sơ đồ mạng."""
-    if not TOPOLOGY_JSON_PATH.exists():
-        return {"status": "error", "message": "Không tìm thấy topology.json"}
-
-    try:
-        topo_data = json.loads(TOPOLOGY_JSON_PATH.read_text(encoding="utf-8"))
-        devices = topo_data.get("devices", [])
-    except Exception as e:
-        return {"status": "error", "message": f"Lỗi đọc topology.json: {e}"}
-
-    created_count = 0
-    running_count = 0
-    stopped_count = 0
-
-    for dev in devices:
-        name = dev.get("name")
-        dev_type = dev.get("type", "").lower()
-        if not name or dev_type in ["cloud", "wazuh"]:
-            continue
-
-        ip = dev.get("ip")
-        res = create_container(name, wazuh_manager_ip, device_ip=ip, enroll_pass=enroll_pass)
-        if res.get("status") == "success":
-            created_count += 1
-            # 5 node chính thì giữ chạy, các node khác tạm dừng (stop)
-            if name in PRIMARY_5_DEVICES:
-                running_count += 1
-            else:
-                toggle_container(name, "stop")
-                stopped_count += 1
-
-    return {
-        "status": "success",
-        "message": f"🎉 THÀNH CÔNG! Đã tạo {created_count} container cho tất cả các node trong sơ đồ.\n- {running_count} node chính đang CHẠY (Active).\n- {stopped_count} node còn lại ở trạng thái ĐÃ TẠO (Stopped - 0% RAM/CPU), bạn có thể nhấp BẬT bất cứ lúc nào!",
-        "created_total": created_count,
-        "running_primary": running_count,
-        "stopped_idle": stopped_stopped_count if 'stopped_stopped_count' in locals() else stopped_count
-    }

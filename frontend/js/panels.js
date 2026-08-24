@@ -188,34 +188,47 @@ async function renderDevicePropertyPanel(dev) {
         <!-- DOCKER CONTAINER CONTROLS FOR ALL NODES -->
         <div style="margin-top:1.2rem; padding:0.9rem; background:#0f172a; border:1px solid #1e293b; border-radius:8px;">
             <div style="font-weight:700; font-size:0.85rem; color:#38bdf8; margin-bottom:0.6rem; display:flex; align-items:center; justify-content:space-between;">
-                <span><i class="fa-brands fa-docker"></i> TRẠNG THÁI CONTAINER</span>
+                <span><i class="fa-brands fa-docker"></i> 1. TRẠNG THÁI DOCKER OS</span>
                 <span id="container-status-badge" style="font-size:0.75rem; font-weight:600; padding:2px 8px; border-radius:4px; background:#334155; color:#94a3b8;">
                     Đang kiểm tra...
                 </span>
             </div>
 
-            <div class="form-group" style="margin-bottom:0.6rem;">
-                <label style="font-size:0.75rem; color:#94a3b8;"><i class="fa-solid fa-server"></i> IP Wazuh Server Target</label>
-                <input type="text" id="prop-container-wazuh-ip" value="${globalWazuhIp}" class="form-control" style="font-size:0.8rem; padding:0.3rem 0.5rem;" placeholder="192.168.1.234">
-            </div>
-
-            <div class="form-group" style="margin-bottom:0.6rem;">
-                <label style="font-size:0.75rem; color:#94a3b8;"><i class="fa-solid fa-key"></i> Mã / Pass Xác Thực Wazuh (nếu có)</label>
-                <input type="text" id="prop-container-wazuh-pass" value="${globalWazuhPass}" class="form-control" style="font-size:0.8rem; padding:0.3rem 0.5rem;" placeholder="Mã xác thực từ Wazuh UI">
-            </div>
-
-            <div style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.6rem;" id="container-action-btns">
-                <button class="btn-action btn-primary" id="btn-create-container" onclick="actionCreateContainer('${dev.name}', '${dev.ip}')" style="font-size:0.8rem; padding:0.4rem;">
-                    <i class="fa-solid fa-cube"></i> Khởi Tạo Container
+            <div style="display:flex; flex-direction:column; gap:0.4rem; margin-bottom:0.8rem;" id="container-action-btns">
+                <button class="btn-action btn-primary" id="btn-create-container" onclick="actionCreateContainer('${dev.name}', '${dev.ip}')" style="font-size:0.8rem; padding:0.4rem; background:#0284c7; border-color:#0369a1;">
+                    <i class="fa-solid fa-cube"></i> ⚡ Khởi Tạo Docker (Clean Container)
                 </button>
                 <div style="display:flex; gap:0.4rem;">
                     <button class="btn-action" id="btn-toggle-container" onclick="actionToggleContainer('${dev.name}')" style="flex:1; font-size:0.8rem; padding:0.4rem; background:#3b82f6; border-color:#2563eb; color:#fff;">
                         <i class="fa-solid fa-power-off"></i> Bật / Tạm Dừng
                     </button>
                     <button class="btn-action" id="btn-remove-container" onclick="actionRemoveContainer('${dev.name}')" style="font-size:0.8rem; padding:0.4rem; background:#ef4444; border-color:#dc2626; color:#fff;">
-                        <i class="fa-solid fa-trash"></i> Xóa Container
+                        <i class="fa-solid fa-trash"></i> Xóa
                     </button>
                 </div>
+            </div>
+
+            <div style="border-top:1px dashed #334155; padding-top:0.6rem; margin-top:0.6rem;">
+                <div style="font-weight:700; font-size:0.82rem; color:#f59e0b; margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center;">
+                    <span><i class="fa-solid fa-shield-halved"></i> 2. DEPLOY VÀO WAZUH SERVER</span>
+                    <span id="deploy-status-badge" style="font-size:0.7rem; font-weight:600; padding:2px 6px; border-radius:4px; background:#475569; color:#cbd5e1;">
+                        Chưa Deploy
+                    </span>
+                </div>
+
+                <div class="form-group" style="margin-bottom:0.4rem;">
+                    <label style="font-size:0.75rem; color:#94a3b8;"><i class="fa-solid fa-server"></i> IP Wazuh Server Target</label>
+                    <input type="text" id="prop-container-wazuh-ip" value="${globalWazuhIp}" class="form-control" style="font-size:0.8rem; padding:0.3rem 0.5rem;" placeholder="192.168.1.234">
+                </div>
+
+                <div class="form-group" style="margin-bottom:0.6rem;">
+                    <label style="font-size:0.75rem; color:#94a3b8;"><i class="fa-solid fa-key"></i> Mã / Pass Xác Thực Wazuh (nếu có)</label>
+                    <input type="text" id="prop-container-wazuh-pass" value="${globalWazuhPass}" class="form-control" style="font-size:0.8rem; padding:0.3rem 0.5rem;" placeholder="Mã xác thực từ Wazuh UI">
+                </div>
+
+                <button class="btn-action" id="btn-deploy-agent" onclick="actionDeployAgent('${dev.name}', '${dev.ip}')" style="width:100%; font-size:0.82rem; padding:0.45rem; background:#16a34a; border-color:#15803d; color:#fff; font-weight:600;">
+                    <i class="fa-solid fa-rocket"></i> 🚀 Deploy Agent Vào Wazuh Server
+                </button>
             </div>
         </div>
 
@@ -234,6 +247,7 @@ async function renderDevicePropertyPanel(dev) {
 
 async function refreshContainerBadge(deviceName) {
     const badge = document.getElementById("container-status-badge");
+    const deployBadge = document.getElementById("deploy-status-badge");
     const btnToggle = document.getElementById("btn-toggle-container");
     const btnCreate = document.getElementById("btn-create-container");
     if (!badge) return;
@@ -243,13 +257,13 @@ async function refreshContainerBadge(deviceName) {
         if (res.status === "running") {
             badge.style.background = "rgba(34,197,94,0.2)";
             badge.style.color = "#22c55e";
-            badge.innerHTML = `🟢 Running (Active)`;
+            badge.innerHTML = `🟢 Running (OS Active)`;
             if (btnToggle) {
                 btnToggle.innerHTML = `<i class="fa-solid fa-pause"></i> Tạm Dừng`;
                 btnToggle.style.background = "#f59e0b";
                 btnToggle.style.borderColor = "#d97706";
             }
-            if (btnCreate) btnCreate.innerText = "🔄 Tải Lại / Re-Create Container";
+            if (btnCreate) btnCreate.innerText = "🔄 Re-Create Clean Container";
         } else if (res.status === "stopped" || res.status === "paused") {
             badge.style.background = "rgba(239,68,68,0.2)";
             badge.style.color = "#ef4444";
@@ -259,13 +273,25 @@ async function refreshContainerBadge(deviceName) {
                 btnToggle.style.background = "#22c55e";
                 btnToggle.style.borderColor = "#16a34a";
             }
-            if (btnCreate) btnCreate.innerText = "🔄 Tải Lại / Re-Create Container";
+            if (btnCreate) btnCreate.innerText = "🔄 Re-Create Clean Container";
         } else {
             badge.style.background = "#334155";
             badge.style.color = "#94a3b8";
             badge.innerHTML = `⚪ Chưa khởi tạo`;
             if (btnToggle) btnToggle.style.display = "none";
-            if (btnCreate) btnCreate.innerText = "⚡ Khởi Tạo Container";
+            if (btnCreate) btnCreate.innerText = "⚡ 1. Khởi Tạo Docker (Clean Container)";
+        }
+
+        if (deployBadge) {
+            if (res.deployed) {
+                deployBadge.style.background = "rgba(34,197,94,0.2)";
+                deployBadge.style.color = "#22c55e";
+                deployBadge.innerHTML = `✅ Registered Wazuh Server`;
+            } else {
+                deployBadge.style.background = "#475569";
+                deployBadge.style.color = "#cbd5e1";
+                deployBadge.innerHTML = `⏳ Chưa Deploy Agent`;
+            }
         }
     } catch (e) {
         badge.style.background = "#334155";
@@ -275,24 +301,42 @@ async function refreshContainerBadge(deviceName) {
 }
 
 async function actionCreateContainer(deviceName, deviceIp) {
-    const wazuhIpInput = document.getElementById("prop-container-wazuh-ip") || document.getElementById("input-wazuh-ip");
-    const wazuhPassInput = document.getElementById("prop-container-wazuh-pass") || document.getElementById("input-wazuh-pass");
-    const wazuhIp = wazuhIpInput ? wazuhIpInput.value.trim() : "172.16.175.145";
-    const wazuhPass = wazuhPassInput ? wazuhPassInput.value.trim() : "";
-
     const badge = document.getElementById("container-status-badge");
     if (badge) {
         badge.style.background = "rgba(56,189,248,0.2)";
         badge.style.color = "#38bdf8";
-        badge.innerText = "⏳ Đang tạo container...";
+        badge.innerText = "⏳ Đang tạo clean container...";
     }
 
     try {
-        const res = await API.createContainer(deviceName, wazuhIp, deviceIp, wazuhPass);
+        const res = await API.createContainer(deviceName, deviceIp);
         alert(res.message);
         await refreshContainerBadge(deviceName);
     } catch (e) {
         alert(`❌ Lỗi khởi tạo container: ${e.message || e}`);
+        await refreshContainerBadge(deviceName);
+    }
+}
+
+async function actionDeployAgent(deviceName, deviceIp) {
+    const wazuhIpInput = document.getElementById("prop-container-wazuh-ip") || document.getElementById("input-wazuh-ip");
+    const wazuhPassInput = document.getElementById("prop-container-wazuh-pass") || document.getElementById("input-wazuh-pass");
+    const wazuhIp = wazuhIpInput ? wazuhIpInput.value.trim() : "192.168.1.234";
+    const wazuhPass = wazuhPassInput ? wazuhPassInput.value.trim() : "";
+
+    const deployBadge = document.getElementById("deploy-status-badge");
+    if (deployBadge) {
+        deployBadge.style.background = "rgba(245,158,11,0.2)";
+        deployBadge.style.color = "#f59e0b";
+        deployBadge.innerText = "🚀 Đang thực thi Deploy...";
+    }
+
+    try {
+        const res = await API.deployAgent(deviceName, wazuhIp, deviceIp, wazuhPass);
+        alert(res.message);
+        await refreshContainerBadge(deviceName);
+    } catch (e) {
+        alert(`❌ Lỗi Deploy Agent: ${e.message || e}`);
         await refreshContainerBadge(deviceName);
     }
 }

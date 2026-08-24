@@ -4,20 +4,20 @@ from typing import Optional
 from backend.services.container_service import (
     get_container_status,
     create_container,
-    toggle_container,
-    batch_create_all_containers
+    deploy_agent_to_manager,
+    toggle_container
 )
 
 router = APIRouter(prefix="/api/container", tags=["Container Manager"])
 
 class ContainerCreateRequest(BaseModel):
     device_name: str
-    wazuh_manager_ip: Optional[str] = "172.16.175.145"
     device_ip: Optional[str] = None
-    enroll_pass: Optional[str] = None
 
-class ContainerBatchCreateRequest(BaseModel):
-    wazuh_manager_ip: Optional[str] = "172.16.175.145"
+class ContainerDeployRequest(BaseModel):
+    device_name: str
+    wazuh_manager_ip: str
+    device_ip: Optional[str] = None
     enroll_pass: Optional[str] = None
 
 class ContainerToggleRequest(BaseModel):
@@ -26,21 +26,21 @@ class ContainerToggleRequest(BaseModel):
 
 @router.get("/status/{device_name:path}")
 def check_status(device_name: str):
-    """Lấy trạng thái Docker container của 1 thiết bị."""
+    """Lấy trạng thái Docker container & trạng thái Deploy của 1 thiết bị."""
     return get_container_status(device_name)
 
 @router.post("/create")
 def create_node_container(req: ContainerCreateRequest):
-    """Khởi tạo container mới cho 1 node."""
-    res = create_container(req.device_name, req.wazuh_manager_ip, req.device_ip, req.enroll_pass)
+    """Khởi tạo Container Docker thuần (Clean OS). CHƯA gia nhập Wazuh Server."""
+    res = create_container(req.device_name, req.device_ip)
     if res.get("status") == "error":
         raise HTTPException(status_code=500, detail=res.get("message"))
     return res
 
-@router.post("/batch-create")
-def batch_create_nodes(req: ContainerBatchCreateRequest):
-    """Tạo toàn bộ container cho tất cả các node trong sơ đồ."""
-    res = batch_create_all_containers(req.wazuh_manager_ip, req.enroll_pass)
+@router.post("/deploy-agent")
+def deploy_agent_endpoint(req: ContainerDeployRequest):
+    """Thực thi Lệnh Deploy Agent từ Wazuh Server vào bên trong Container."""
+    res = deploy_agent_to_manager(req.device_name, req.wazuh_manager_ip, req.device_ip, req.enroll_pass)
     if res.get("status") == "error":
         raise HTTPException(status_code=500, detail=res.get("message"))
     return res

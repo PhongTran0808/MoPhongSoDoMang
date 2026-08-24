@@ -70,20 +70,20 @@ const API = {
         return await res.json();
     },
 
-    async createContainer(deviceName, wazuhIp, deviceIp, enrollPass) {
+    async createContainer(deviceName, deviceIp) {
         const res = await fetch("/api/container/create", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ device_name: deviceName, wazuh_manager_ip: wazuhIp, device_ip: deviceIp, enroll_pass: enrollPass })
+            body: JSON.stringify({ device_name: deviceName, device_ip: deviceIp })
         });
         return await res.json();
     },
 
-    async batchCreateContainers(wazuhIp, enrollPass) {
-        const res = await fetch("/api/container/batch-create", {
+    async deployAgent(deviceName, wazuhIp, deviceIp, enrollPass) {
+        const res = await fetch("/api/container/deploy-agent", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ wazuh_manager_ip: wazuhIp, enroll_pass: enrollPass })
+            body: JSON.stringify({ device_name: deviceName, wazuh_manager_ip: wazuhIp, device_ip: deviceIp, enroll_pass: enrollPass })
         });
         return await res.json();
     },
