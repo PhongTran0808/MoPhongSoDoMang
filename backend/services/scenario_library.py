@@ -44,6 +44,12 @@ def get_available_scenarios() -> List[Dict[str, Any]]:
             "name": "🌊 Volumetric DDoS Traffic Flood",
             "description": "Bắn 100 gói log lưu lượng cao dồn dập trong 5 giây tới Firewall/Server để thử khả năng correlation của Wazuh.",
             "recommended_target_os": "Any"
+        },
+        {
+            "id": "normal_traffic",
+            "name": "🟢 Normal Healthy Traffic (Hoạt Động Bình Thường)",
+            "description": "Gửi các log lưu lượng hợp lệ thời gian thực (HTTP 200 GET, SSH Login Thành Công, FortiGate Traffic ACCEPT/ALLOW, DNS Lookup) đại diện cho hoạt động bình thường của doanh nghiệp.",
+            "recommended_target_os": "Any"
         }
     ]
 
@@ -114,6 +120,19 @@ def run_scenario_task(req: ScenarioRequest, src_device: DeviceModel, target_devi
                 SCENARIO_RUNNING_STATE["logs_sent"] += 1
                 SCENARIO_RUNNING_STATE["last_log"] = log_msg
                 time.sleep(0.05)  # Very fast flood (50ms)
+
+        elif req.scenario_id == "normal_traffic":
+            total = req.burst_count
+            for i in range(total):
+                if not SCENARIO_RUNNING_STATE["is_running"]:
+                    break
+                log_msg = injector.generate_normal_traffic_log(src_device, target_device)
+                injector.send_raw_syslog(log_msg)
+                
+                SCENARIO_RUNNING_STATE["current_step"] = i + 1
+                SCENARIO_RUNNING_STATE["logs_sent"] += 1
+                SCENARIO_RUNNING_STATE["last_log"] = log_msg
+                time.sleep(0.2)
 
         SCENARIO_RUNNING_STATE["status"] = f"Hoàn tất kịch bản {req.scenario_id}! Đã gửi {SCENARIO_RUNNING_STATE['logs_sent']} log."
     except Exception as e:

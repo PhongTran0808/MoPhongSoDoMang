@@ -129,8 +129,7 @@ body {
     flex: 1;
     display: grid;
     grid-template-columns: 1fr 340px;
-    min-height: 480px;
-    height: calc(100vh - 54px - 44px - 140px);
+    min-height: 0;
     overflow: hidden;
 }
 
@@ -138,7 +137,7 @@ body {
 .canvas-container {
     width: 100%;
     height: 100%;
-    min-height: 480px;
+    min-height: 0;
     background: radial-gradient(circle at center, #0e172a 0%, #030712 100%);
     position: relative;
     overflow: hidden;
@@ -213,35 +212,96 @@ div.vis-network div.vis-manipulation div.vis-button {
 }
 
 /* Bottom Scenario Bar */
+/* Bottom Scenario Bar - Full Width Stacked Layout */
 .scenario-bar {
-    height: 140px;
-    background: #090f1e;
-    border-top: 1px solid var(--border-color);
-    padding: 0.8rem 1.2rem;
+    height: 125px;
+    min-height: 125px;
+    background: #060b17;
+    border-top: 2px solid var(--accent-cyan);
+    padding: 0.4rem 1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
+    gap: 0.35rem;
     flex-shrink: 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.scenario-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.scenario-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .scenario-controls {
     display: flex;
-    align-items: center;
-    gap: 0.8rem;
+    align-items: flex-end;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.scenario-btns {
+    display: flex;
+    gap: 0.3rem;
+    align-self: flex-end;
+    flex-shrink: 0;
+}
+
+.btn-normal {
+    background: #059669 !important;
+    border-color: #10b981 !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    padding: 0.35rem 0.6rem !important;
+    font-size: 0.78rem !important;
+}
+.btn-normal:hover {
+    background: #10b981 !important;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.5) !important;
+}
+
+.btn-attack {
+    background: #dc2626 !important;
+    border-color: #ef4444 !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    padding: 0.35rem 0.6rem !important;
+    font-size: 0.78rem !important;
+}
+.btn-attack:hover {
+    background: #ef4444 !important;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.5) !important;
+}
+
+.btn-stop {
+    background: #334155 !important;
+    border-color: #475569 !important;
+    color: #cbd5e1 !important;
+    padding: 0.35rem 0.6rem !important;
+    font-size: 0.78rem !important;
 }
 
 .scenario-status-box {
-    flex: 1;
-    background: #070c18;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 0.4rem 0.8rem;
-    font-size: 0.75rem;
+    width: 100%;
+    height: 34px;
+    background: #020617;
+    border: 1px solid #1e293b;
+    border-radius: 4px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.76rem;
     font-family: 'Fira Code', monospace;
     color: #38bdf8;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    overflow-x: auto;
     white-space: nowrap;
+    line-height: 1.4;
 }
 
 .badge-info {

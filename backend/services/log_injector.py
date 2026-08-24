@@ -111,3 +111,42 @@ class LogInjector:
             f"An attempt was made to access an object. Object Name: {file_path} "
             f"Process Name: C:\\Users\\Public\\svchost_update.exe Accesses: WriteData Delete"
         )
+
+    def generate_normal_traffic_log(self, src_device: DeviceModel, target_device: DeviceModel) -> str:
+        """
+        Sinh log lưu lượng hoạt động bình thường (Healthy Normal Operation Logs):
+        - FortiGate ACCEPT traffic
+        - Linux SSH Successful Logon
+        - Nginx HTTP 200 OK GET Request
+        - Windows Event 4624 Successful Logon
+        """
+        now_syslog = datetime.datetime.now().strftime("%b %d %H:%M:%S")
+        now_fg = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        pid = random.randint(1000, 9999)
+        src_port = random.randint(1024, 65535)
+        
+        choice = random.choice(["fortigate_accept", "ssh_success", "nginx_200", "windows_login"])
+        
+        if choice == "fortigate_accept":
+            session_id = random.randint(100000, 999999)
+            dst_port = random.choice([80, 443, 53, 22])
+            bytes_sent = random.randint(500, 15000)
+            bytes_rcvd = random.randint(1000, 50000)
+            return (
+                f"<134>date={now_fg.split()[0]} time={now_fg.split()[1]} devname=\"{src_device.name}\" "
+                f"devid=\"FGT60E-SIMULATED\" logid=\"0000000013\" type=\"traffic\" subtype=\"forward\" "
+                f"level=\"notice\" vd=\"root\" srcip={src_device.ip} srcport={src_port} "
+                f"dstip={target_device.ip} dstport={dst_port} sessionid={session_id} "
+                f"action=\"accept\" policyid=10 dstcountry=\"Internal\" srccountry=\"Internal\" "
+                f"trandisp=\"noop\" service=\"TCP/{dst_port}\" app=\"HTTPS\" duration=12 sentbyte={bytes_sent} rcvdbyte={bytes_rcvd}"
+            )
+        elif choice == "ssh_success":
+            users = ["kweismann", "admin", "devops", "operator"]
+            user = random.choice(users)
+            return f"<13>{now_syslog} {target_device.name} sshd[{pid}]: Accepted publickey for {user} from {src_device.ip} port {src_port} ssh2"
+        elif choice == "nginx_200":
+            methods = ["GET /index.html", "GET /api/v1/health", "GET /static/style.css", "POST /api/v1/data"]
+            uri = random.choice(methods)
+            return f"<13>{now_syslog} {target_device.name} nginx: {src_device.ip} - - [{datetime.datetime.now().strftime('%d/%b/%Y:%H:%M:%S %z')}] \"{uri} HTTP/1.1\" 200 4520 \"-\" \"Mozilla/5.0 (X11; Linux x86_64)\""
+        else:
+            return self.generate_windows_event_log(src_device, target_device, event_id=4624)

@@ -107,9 +107,42 @@ async function deleteCurrentLink(linkId) {
     renderEmptyPropertyPanel();
 }
 
-function renderDevicePropertyPanel(dev) {
+async function renderDevicePropertyPanel(dev) {
     const panel = document.getElementById("prop-panel-body");
     if (!panel) return;
+
+    const globalWazuhIp = (document.getElementById("input-wazuh-ip") || {}).value || "172.16.175.145";
+    const globalWazuhPass = (document.getElementById("input-wazuh-pass") || {}).value || "";
+
+    const osStr = (dev.os || "").toLowerCase();
+    const isWindows = osStr.includes("win") || dev.type === "pc";
+    const isLinux = osStr.includes("ubuntu") || osStr.includes("linux") || osStr.includes("rhel") || osStr.includes("redhat") || dev.type === "server";
+    
+    let osBadgeHtml = "";
+    if (isWindows) {
+        osBadgeHtml = `
+            <div style="margin-top:0.8rem; background:rgba(59,130,246,0.1); border:1px solid #3b82f6; border-radius:6px; padding:0.6rem; font-size:0.75rem; color:#60a5fa;">
+                <div style="font-weight:700; margin-bottom:0.3rem;"><i class="fa-brands fa-windows"></i> HỆ ĐIỀU HÀNH: WINDOWS (${dev.os || 'Windows 11 / Server'})</div>
+                <div>Khuyên dùng gói: <strong>MSI 32/64-bit</strong></div>
+                <div style="margin-top:0.4rem; background:#020617; padding:0.4rem; border-radius:4px; font-family:monospace; font-size:0.7rem; color:#a78bfa; word-break:break-all;">
+                    WAZUH_MANAGER='${globalWazuhIp}' WAZUH_AGENT_NAME='${dev.name}' msiexec /i wazuh-agent.msi /q
+                </div>
+            </div>`;
+    } else if (isLinux) {
+        osBadgeHtml = `
+            <div style="margin-top:0.8rem; background:rgba(34,197,94,0.1); border:1px solid #22c55e; border-radius:6px; padding:0.6rem; font-size:0.75rem; color:#4ade80;">
+                <div style="font-weight:700; margin-bottom:0.3rem;"><i class="fa-brands fa-linux"></i> HỆ ĐIỀU HÀNH: LINUX (${dev.os || 'Ubuntu / RHEL / Linux'})</div>
+                <div>Khuyên dùng gói: <strong>RPM / DEB amd64</strong></div>
+                <div style="margin-top:0.4rem; background:#020617; padding:0.4rem; border-radius:4px; font-family:monospace; font-size:0.7rem; color:#38bdf8; word-break:break-all;">
+                    WAZUH_MANAGER='${globalWazuhIp}' WAZUH_AGENT_NAME='${dev.name}' rpm -ihv wazuh-agent-4.14.7.rpm
+                </div>
+            </div>`;
+    } else {
+        osBadgeHtml = `
+            <div style="margin-top:0.8rem; background:rgba(234,179,8,0.1); border:1px solid #eab308; border-radius:6px; padding:0.6rem; font-size:0.75rem; color:#fde047;">
+                <div style="font-weight:700;"><i class="fa-solid fa-microchip"></i> HỆ ĐIỀU HÀNH: APPLIANCE / SYSTEM (${dev.os || 'Enterprise OS'})</div>
+            </div>`;
+    }
 
     panel.innerHTML = `
         <div class="form-group">
@@ -145,12 +178,48 @@ function renderDevicePropertyPanel(dev) {
             <input type="text" id="prop-dev-os" value="${dev.os || ''}" class="form-control">
         </div>
 
-        <div class="form-group">
+        ${osBadgeHtml}
+
+        <div class="form-group" style="margin-top:0.8rem;">
             <label>Mức Độ Quan Trọng (Asset Criticality 1-10)</label>
             <input type="number" id="prop-dev-crit" value="${dev.criticality}" min="1" max="10" class="form-control">
         </div>
 
-        <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+        <!-- DOCKER CONTAINER CONTROLS FOR ALL NODES -->
+        <div style="margin-top:1.2rem; padding:0.9rem; background:#0f172a; border:1px solid #1e293b; border-radius:8px;">
+            <div style="font-weight:700; font-size:0.85rem; color:#38bdf8; margin-bottom:0.6rem; display:flex; align-items:center; justify-content:space-between;">
+                <span><i class="fa-brands fa-docker"></i> TRẠNG THÁI CONTAINER</span>
+                <span id="container-status-badge" style="font-size:0.75rem; font-weight:600; padding:2px 8px; border-radius:4px; background:#334155; color:#94a3b8;">
+                    Đang kiểm tra...
+                </span>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0.6rem;">
+                <label style="font-size:0.75rem; color:#94a3b8;"><i class="fa-solid fa-server"></i> IP Wazuh Server Target</label>
+                <input type="text" id="prop-container-wazuh-ip" value="${globalWazuhIp}" class="form-control" style="font-size:0.8rem; padding:0.3rem 0.5rem;" placeholder="192.168.1.234">
+            </div>
+
+            <div class="form-group" style="margin-bottom:0.6rem;">
+                <label style="font-size:0.75rem; color:#94a3b8;"><i class="fa-solid fa-key"></i> Mã / Pass Xác Thực Wazuh (nếu có)</label>
+                <input type="text" id="prop-container-wazuh-pass" value="${globalWazuhPass}" class="form-control" style="font-size:0.8rem; padding:0.3rem 0.5rem;" placeholder="Mã xác thực từ Wazuh UI">
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:0.4rem; margin-top:0.6rem;" id="container-action-btns">
+                <button class="btn-action btn-primary" id="btn-create-container" onclick="actionCreateContainer('${dev.name}', '${dev.ip}')" style="font-size:0.8rem; padding:0.4rem;">
+                    <i class="fa-solid fa-cube"></i> Khởi Tạo Container
+                </button>
+                <div style="display:flex; gap:0.4rem;">
+                    <button class="btn-action" id="btn-toggle-container" onclick="actionToggleContainer('${dev.name}')" style="flex:1; font-size:0.8rem; padding:0.4rem; background:#3b82f6; border-color:#2563eb; color:#fff;">
+                        <i class="fa-solid fa-power-off"></i> Bật / Tạm Dừng
+                    </button>
+                    <button class="btn-action" id="btn-remove-container" onclick="actionRemoveContainer('${dev.name}')" style="font-size:0.8rem; padding:0.4rem; background:#ef4444; border-color:#dc2626; color:#fff;">
+                        <i class="fa-solid fa-trash"></i> Xóa Container
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div style="display:flex; gap:0.5rem; margin-top:1.2rem;">
             <button class="btn-action btn-primary" style="flex:1;" onclick="saveCurrentDevice('${dev.id}')">
                 <i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi
             </button>
@@ -159,6 +228,117 @@ function renderDevicePropertyPanel(dev) {
             </button>
         </div>
     `;
+
+    refreshContainerBadge(dev.name);
+}
+
+async function refreshContainerBadge(deviceName) {
+    const badge = document.getElementById("container-status-badge");
+    const btnToggle = document.getElementById("btn-toggle-container");
+    const btnCreate = document.getElementById("btn-create-container");
+    if (!badge) return;
+
+    try {
+        const res = await API.getContainerStatus(deviceName);
+        if (res.status === "running") {
+            badge.style.background = "rgba(34,197,94,0.2)";
+            badge.style.color = "#22c55e";
+            badge.innerHTML = `🟢 Running (Active)`;
+            if (btnToggle) {
+                btnToggle.innerHTML = `<i class="fa-solid fa-pause"></i> Tạm Dừng`;
+                btnToggle.style.background = "#f59e0b";
+                btnToggle.style.borderColor = "#d97706";
+            }
+            if (btnCreate) btnCreate.innerText = "🔄 Tải Lại / Re-Create Container";
+        } else if (res.status === "stopped" || res.status === "paused") {
+            badge.style.background = "rgba(239,68,68,0.2)";
+            badge.style.color = "#ef4444";
+            badge.innerHTML = `🔴 Stopped (Tạm dừng)`;
+            if (btnToggle) {
+                btnToggle.innerHTML = `<i class="fa-solid fa-play"></i> Bật Hoạt Động`;
+                btnToggle.style.background = "#22c55e";
+                btnToggle.style.borderColor = "#16a34a";
+            }
+            if (btnCreate) btnCreate.innerText = "🔄 Tải Lại / Re-Create Container";
+        } else {
+            badge.style.background = "#334155";
+            badge.style.color = "#94a3b8";
+            badge.innerHTML = `⚪ Chưa khởi tạo`;
+            if (btnToggle) btnToggle.style.display = "none";
+            if (btnCreate) btnCreate.innerText = "⚡ Khởi Tạo Container";
+        }
+    } catch (e) {
+        badge.style.background = "#334155";
+        badge.style.color = "#94a3b8";
+        badge.innerText = "Không rõ";
+    }
+}
+
+async function actionCreateContainer(deviceName, deviceIp) {
+    const wazuhIpInput = document.getElementById("prop-container-wazuh-ip") || document.getElementById("input-wazuh-ip");
+    const wazuhPassInput = document.getElementById("prop-container-wazuh-pass") || document.getElementById("input-wazuh-pass");
+    const wazuhIp = wazuhIpInput ? wazuhIpInput.value.trim() : "172.16.175.145";
+    const wazuhPass = wazuhPassInput ? wazuhPassInput.value.trim() : "";
+
+    const badge = document.getElementById("container-status-badge");
+    if (badge) {
+        badge.style.background = "rgba(56,189,248,0.2)";
+        badge.style.color = "#38bdf8";
+        badge.innerText = "⏳ Đang tạo container...";
+    }
+
+    try {
+        const res = await API.createContainer(deviceName, wazuhIp, deviceIp, wazuhPass);
+        alert(res.message);
+        await refreshContainerBadge(deviceName);
+    } catch (e) {
+        alert(`❌ Lỗi khởi tạo container: ${e.message || e}`);
+        await refreshContainerBadge(deviceName);
+    }
+}
+
+async function actionBatchCreateAllContainers() {
+    const wazuhIpInput = document.getElementById("input-wazuh-ip");
+    const wazuhPassInput = document.getElementById("input-wazuh-pass");
+    const wazuhIp = wazuhIpInput ? wazuhIpInput.value.trim() : "172.16.175.145";
+    const wazuhPass = wazuhPassInput ? wazuhPassInput.value.trim() : "";
+
+    if (!confirm(`🚀 Bạn có chắc muốn Khởi Tạo Docker cho TẤT CẢ các Node trong sơ đồ?\n- IP Wazuh Server Target: ${wazuhIp}\n- Mã Xác Thực: ${wazuhPass || '(Không có)'}\n- 5 Node chính sẽ ở trạng thái BẬT, các node khác ở trạng thái TẠM DỪNG (0% RAM/CPU) để bạn bật khi cần.`)) return;
+
+    try {
+        const res = await API.batchCreateContainers(wazuhIp, wazuhPass);
+        alert(res.message);
+        await initCanvas();
+    } catch (e) {
+        alert(`❌ Lỗi khởi tạo hàng loạt: ${e.message || e}`);
+    }
+}
+
+async function actionToggleContainer(deviceName) {
+    const statusRes = await API.getContainerStatus(deviceName);
+    const nextAction = statusRes.status === "running" ? "stop" : "start";
+
+    try {
+        const res = await API.toggleContainer(deviceName, nextAction);
+        alert(res.message);
+        await refreshContainerBadge(deviceName);
+    } catch (e) {
+        alert(`❌ Lỗi thao tác container: ${e.message || e}`);
+        await refreshContainerBadge(deviceName);
+    }
+}
+
+async function actionRemoveContainer(deviceName) {
+    if (!confirm(`Bạn có chắc muốn XÓA container của ${deviceName}?`)) return;
+
+    try {
+        const res = await API.toggleContainer(deviceName, "remove");
+        alert(res.message);
+        await refreshContainerBadge(deviceName);
+    } catch (e) {
+        alert(`❌ Lỗi xóa container: ${e.message || e}`);
+        await refreshContainerBadge(deviceName);
+    }
 }
 
 async function saveCurrentDevice(devId) {

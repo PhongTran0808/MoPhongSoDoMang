@@ -21,11 +21,8 @@
             </div>
         </div>
         <div class="header-actions">
-            <button class="btn-action btn-success" onclick="exportToAgentWazuhAction()">
-                <i class="fa-solid fa-file-export"></i> ⚡ 1-Click Export sang AgentWazuh
-            </button>
             <button class="btn-action btn-primary" onclick="initCanvas()">
-                <i class="fa-solid fa-arrows-rotate"></i> Tải Lại
+                <i class="fa-solid fa-arrows-rotate"></i> Tải Lại Sơ Đồ
             </button>
         </div>
     </header>
@@ -42,9 +39,12 @@
             <button class="btn-action" onclick="addNewDevice('cloud')"><i class="fa-solid fa-cloud" style="color:#38bdf8;"></i> + Cloud / WAN</button>
             <button class="btn-action" onclick="addNewDevice('wazuh')"><i class="fa-solid fa-shield-virus" style="color:#eab308;"></i> + Wazuh Server</button>
         </div>
-        <div class="toolbar-group" style="border-right:none;">
+        <div class="toolbar-group" style="border-right:none; display:flex; gap:0.5rem;">
             <button class="btn-action btn-primary" onclick="openConnectModal()">
-                <i class="fa-solid fa-link"></i> 🔗 Nối Dây Mạng (Connect Devices)
+                <i class="fa-solid fa-link"></i> 🔗 Nối Dây Mạng
+            </button>
+            <button class="btn-action" onclick="actionBatchCreateAllContainers()" style="background:#2563eb; border-color:#1d4ed8; color:#fff;">
+                <i class="fa-brands fa-docker"></i> 🐳 Khởi Tạo Docker Tất Cả Node (5 Active, Tùy Chọn Bật)
             </button>
         </div>
     </div>
@@ -96,21 +96,21 @@
 
     <!-- Bottom Scenario Launcher Bar -->
     <div class="scenario-bar">
-        <div style="display:flex; align-items:center; justify-content:space-between;">
-            <div style="font-size:0.85rem; font-weight:700; color:var(--accent-cyan); display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid fa-crosshairs"></i> BỘ KÍCH HOẠT KỊCH BẢN TẤN CÔNG GIẢ LẬP (LOG INJECTOR ENGINE)
+        <div class="scenario-header-row">
+            <div class="scenario-title">
+                <i class="fa-solid fa-crosshairs"></i> BỘ KÍCH HOẠT KỊCH BẢN GIẢ LẬP (LOG INJECTOR ENGINE)
             </div>
-            <span class="badge-info">Target: Syslog UDP 514</span>
+            <span class="badge-info">Target: Syslog UDP 514 (Wazuh Manager)</span>
         </div>
 
         <div class="scenario-controls">
-            <div class="form-group" style="flex:2;">
-                <label>Kịch Bản Tấn Công</label>
+            <div class="form-group" style="flex:1.8;">
+                <label>Kịch Bản Tấn Công / Hoạt Động</label>
                 <select id="select-scenario" class="form-control"></select>
             </div>
 
             <div class="form-group" style="flex:1.2;">
-                <label>Nguồn Tấn Công (Src)</label>
+                <label>Nguồn (Src)</label>
                 <select id="select-src-device" class="form-control"></select>
             </div>
 
@@ -119,23 +119,31 @@
                 <select id="select-target-device" class="form-control"></select>
             </div>
 
-            <div class="form-group" style="flex:1.2;">
+            <div class="form-group" style="flex:1;">
                 <label>IP Wazuh Server</label>
-                <input type="text" id="input-wazuh-ip" value="172.16.175.145" class="form-control">
+                <input type="text" id="input-wazuh-ip" value="172.16.175.145" class="form-control" placeholder="192.168.1.234">
             </div>
 
-            <div style="display:flex; gap:0.4rem; align-self:flex-end;">
-                <button class="btn-action btn-primary" style="background:#ef4444; border-color:#dc2626;" onclick="triggerScenarioAction()">
-                    <i class="fa-solid fa-play"></i> BẮT ĐẦU
+            <div class="form-group" style="flex:1.2;">
+                <label>Mã / Pass Wazuh (nếu có)</label>
+                <input type="text" id="input-wazuh-pass" value="" class="form-control" placeholder="Mã xác thực Wazuh">
+            </div>
+
+            <div class="scenario-btns">
+                <button class="btn-action btn-normal" onclick="triggerNormalTrafficAction()">
+                    <i class="fa-solid fa-circle-check"></i> 🟢 BÌNH THƯỜNG
                 </button>
-                <button class="btn-action" onclick="stopScenarioAction()">
+                <button class="btn-action btn-attack" onclick="triggerScenarioAction()">
+                    <i class="fa-solid fa-play"></i> ⚡ TẤN CÔNG
+                </button>
+                <button class="btn-action btn-stop" onclick="stopScenarioAction()">
                     <i class="fa-solid fa-stop"></i> Dừng
                 </button>
             </div>
         </div>
 
         <div id="scenario-status-log" class="scenario-status-box">
-            [Trạng thái Idle] Chưa kích hoạt kịch bản. Sẵn sàng bắn log Syslog UDP 514 tới Wazuh Manager thật.
+            [Trạng thái Idle] Chưa kích hoạt kịch bản. Sẵn sàng bắn log Syslog UDP 514 tới Wazuh Manager (172.16.175.145).
         </div>
     </div>
 

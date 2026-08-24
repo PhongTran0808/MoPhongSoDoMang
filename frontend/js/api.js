@@ -63,5 +63,37 @@ const API = {
             method: "POST"
         });
         return await res.json();
+    },
+
+    async getContainerStatus(deviceName) {
+        const res = await fetch(`/api/container/status/${encodeURIComponent(deviceName)}`);
+        return await res.json();
+    },
+
+    async createContainer(deviceName, wazuhIp, deviceIp, enrollPass) {
+        const res = await fetch("/api/container/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ device_name: deviceName, wazuh_manager_ip: wazuhIp, device_ip: deviceIp, enroll_pass: enrollPass })
+        });
+        return await res.json();
+    },
+
+    async batchCreateContainers(wazuhIp, enrollPass) {
+        const res = await fetch("/api/container/batch-create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ wazuh_manager_ip: wazuhIp, enroll_pass: enrollPass })
+        });
+        return await res.json();
+    },
+
+    async toggleContainer(deviceName, action) {
+        const res = await fetch("/api/container/toggle", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ device_name: deviceName, action: action })
+        });
+        return await res.json();
     }
 };

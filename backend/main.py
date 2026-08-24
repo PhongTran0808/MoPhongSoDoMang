@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from backend.routes.designer_api import router as designer_router
 from backend.routes.injector_api import router as injector_router
+from backend.routes.container_api import router as container_router
 
 app = FastAPI(
     title="WazuhSim — Topology Designer & Log Injector",
@@ -28,6 +29,7 @@ app.mount("/static", StaticFiles(directory=str(FRONTEND_DIR)), name="static")
 # Include Routers
 app.include_router(designer_router)
 app.include_router(injector_router)
+app.include_router(container_router)
 
 
 @app.get("/", response_class=HTMLResponse)

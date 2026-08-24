@@ -73,8 +73,5 @@ def delete_link(link_id: str):
 
 @router.post("/export-agent-wazuh")
 def export_to_agentwazuh():
-    """1-Click Export: Đồng bộ danh sách thiết bị sang config/known_devices.json của AgentWazuh."""
-    result = export_to_agent_wazuh()
-    if result.get("status") == "success":
-        return result
-    raise HTTPException(status_code=500, detail=result.get("message", "Lỗi export"))
+    """Chức năng Export thủ công đã bị vô hiệu hóa để đảm bảo AgentWazuh tự đọc từ Wazuh Server."""
+    return {"status": "disabled", "message": "Chức năng Export thủ công đã bị vô hiệu hóa. AgentWazuh sẽ tự động đọc trực tiếp từ Wazuh Server REST API 55000."}

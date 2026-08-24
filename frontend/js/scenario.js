@@ -71,6 +71,28 @@ async function triggerScenarioAction() {
     }
 }
 
+async function triggerNormalTrafficAction() {
+    const srcId = document.getElementById("select-src-device").value;
+    const targetId = document.getElementById("select-target-device").value;
+    const wazuhHost = document.getElementById("input-wazuh-ip").value.trim() || "172.16.175.145";
+
+    const payload = {
+        scenario_id: "normal_traffic",
+        source_device_id: srcId,
+        target_device_id: targetId,
+        wazuh_host: wazuhHost,
+        wazuh_syslog_port: 514,
+        burst_count: 30
+    };
+
+    const res = await API.runScenario(payload);
+    if (res.status === "success") {
+        startStatusPolling();
+    } else {
+        alert(`❌ Error: ${res.detail || res.message}`);
+    }
+}
+
 async function stopScenarioAction() {
     await API.stopScenario();
 }
@@ -79,17 +101,31 @@ function startStatusPolling() {
     if (isPollingInjector) return;
     isPollingInjector = true;
 
+    const statusBox = document.getElementById("scenario-status-log");
+    if (statusBox) {
+        statusBox.style.borderColor = "#10b981";
+        statusBox.style.boxShadow = "0 0 12px rgba(16, 185, 129, 0.4)";
+    }
+
     const interval = setInterval(async () => {
         const status = await API.getInjectorStatus();
         const statusBox = document.getElementById("scenario-status-log");
 
         if (statusBox) {
-            statusBox.textContent = `[${status.status}] Step: ${status.current_step}/${status.total_steps} | Last: ${status.last_log || "None"}`;
+            if (status.is_running) {
+                statusBox.style.color = "#4ade80";
+                statusBox.innerHTML = `🚀 <b>[ĐANG BẮN LOG THỜI GIAN THỰC UDP 514]</b> Progress: <b>${status.current_step}/${status.total_steps}</b> (Đã gửi ${status.logs_sent} logs)<br><span style="color:#94a3b8; font-size:0.78rem;">Log Gần Nhất: ${status.last_log || "Đang tạo gói UDP..."}</span>`;
+            } else {
+                statusBox.style.color = "#38bdf8";
+                statusBox.style.borderColor = "#1e293b";
+                statusBox.style.boxShadow = "none";
+                statusBox.innerHTML = `✅ <b>[HOÀN TẤT BẮN LOG]</b> ${status.status} | Tổng số log đã bắn: <b>${status.logs_sent}</b>.<br><span style="color:#a78bfa; font-size:0.78rem;">Log cuối: ${status.last_log || "None"}</span>`;
+            }
         }
 
         if (!status.is_running) {
             isPollingInjector = false;
             clearInterval(interval);
         }
-    }, 500);
+    }, 400);
 }
