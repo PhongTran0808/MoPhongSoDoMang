@@ -1,72 +1,58 @@
-# 🛰️ WazuhSim — Topology Designer & Lightweight Log Injector
+# 🌐 SODOMANG — 38-NODE NETWORK TOPOLOGY & DOCKER MANAGER
 
-**WazuhSim** là phân hệ giả lập sơ đồ mạng siêu nhẹ & công cụ bắn log tấn công (Log Injector) dành cho **Wazuh Manager THẬT** và **AgentWazuh AI Co-Pilot**.
+## 📌 1. TỔNG QUAN HỆ THỐNG SODOMANG
 
----
-
-## 🎯 Lý Do & Ranh Giới Thiết Kế
-
-| Vấn đề cũ | Giải pháp WazuhSim |
-|---|---|
-| Chạy EVE-NG tốn 6-12GB RAM | **Python UDP Syslog Injector**: Tốn ~100MB RAM |
-| Giả lập REST API dễ bị sai với đồ thật | **Wazuh Manager THẬT (VMware 172.16.175.145)** xử lý log thật & sinh Alert thật 100% |
-| Sơ đồ không đồng bộ với AI | **1-Click Export** đẩy sơ đồ mạng sang `config/known_devices.json` của AgentWazuh |
+**SoDoMang** là nền tảng thiết kế sơ đồ mạng động (Dynamic Network Topology Visualizer) tích hợp trình quản lý Docker Container (Docker Container Orchestrator). Hệ thống cho phép trực quan hóa hơn 38 thiết bị mạng doanh nghiệp (Tường lửa FortiGate, Switch Cisco Catalyst, DMZ Web Server, Workstation các VLAN 10-60, Branch Offices, Wazuh Manager) và đồng bộ trực tiếp sang AgentWazuh để giám sát SOC AI.
 
 ---
 
-## 🏗️ Cấu Trúc Thư Mục
+## 🏗️ 2. KIẾN TRÚC VÀ CÁC THÀNH PHẦN SODOMANG
 
+### 2.1 Cổng dịch vụ (Ports)
+- **Port 9090**: Giao diện UI Vis.js & FastAPI Backend Server (`backend/main.py`).
+
+### 2.2 Structure Thư mục
 ```text
 SoDoMang/
 ├── backend/
-│   ├── main.py                   # FastAPI app (Port 9090)
-│   ├── models/
-│   │   └── topology_models.py    # Pydantic Schemas (Device, Link, Scenario)
-│   ├── routes/
-│   │   ├── designer_api.py       # API CRUD sơ đồ
-│   │   └── injector_api.py       # API kích hoạt & dừng kịch bản tấn công
-│   ├── services/
-│   │   ├── topology_store.py     # Đọc/ghi config/topology.json & Export AgentWazuh
-│   │   ├── log_injector.py       # Sinh & bắn UDP Syslog port 514
-│   │   └── scenario_library.py   # Các kịch bản Brute-force, Scan, Ransomware, DDoS
-│   └── requirements.txt
+│   └── main.py              # FastAPI server (Port 9090), Static Fallback Route, REST APIs
 ├── frontend/
-│   ├── index.html                # Cyber Dark Mode SPA Interface
-│   ├── js/                       # Canvas, Panels, API, Scenario logic
-│   └── style.css
-├── config/
-│   └── topology.json             # Nguồn sự thật sơ đồ mạng
-└── README.md
+│   ├── index.html           # HTML5 UI, Embedded Cyber Dark CSS, Vis-Network Topology Engine
+│   └── style.css            # Stylesheet mở rộng
+└── config/
+    └── topology.json        # Cơ sở dữ liệu JSON lưu trữ 38 thiết bị & liên kết mạng
 ```
 
 ---
 
-## 🚀 Hướng Dẫn Khởi Chạy
+## 🚀 3. HƯỚNG DẪN KHỞI ĐỘNG HỆ THỐNG (RUNNING PROCEDURE)
 
+### 3.1 Khởi động độc lập SoDoMang (Port 9090)
 ```bash
 cd "/run/media/kweismann/Dir_D/Tiểu luận CN/SoDoMang"
-pip install -r backend/requirements.txt
 python3 backend/main.py
 ```
 
-Truy cập giao diện UI tại: **`http://127.0.0.1:9090`**
+### 3.2 Khởi động đồng thời cả AgentWazuh (8080) và SoDoMang (9090)
+```bash
+python3 /tmp/start_agentwazuh_and_sodomang.py
+```
 
 ---
 
-## ⚡ Tính Năng Cốt Lõi
+## 🛠️ 4. CÁC LỖI THƯỜNG GẶP VÀ CÁCH KHẮC PHỤC (TROUBLESHOOTING & KNOWN BUGS)
 
-1. **Vẽ & Thiết Kế Sơ Đồ Mạng**:
-   - Thêm Firewall (FortiGate), Router (Cisco), Switch, Server, Endpoint PC.
-   - Chỉnh sửa IP, Tên, Hệ điều hành, Mức độ quan trọng (Asset Criticality 1-10).
-   - Kéo-thả sắp xếp vị trí tự do.
+### 🔴 Lỗi 1: Giao diện vỡ CSS ("bị vỡ cSS / Lỗi hiển thị trên HTML")
+- **Nguyên nhân**: FastAPI không load được file `style.css` khi truy cập ở đường dẫn gốc `/style.css`.
+- **Khắc phục**:
+  1. Nhúng trực tiếp toàn bộ CSS vào thẻ `<style>` trong `frontend/index.html`.
+  2. Thêm route fallback trong `backend/main.py`:
+     ```python
+     @app.get("/style.css")
+     async def serve_root_static():
+         return FileResponse("frontend/style.css")
+     ```
 
-2. **1-Click Export sang AgentWazuh**:
-   - Nhấp nút **⚡ 1-Click Export** trên thanh công cụ.
-   - Danh sách thiết bị tự động được lưu vào `/run/media/kweismann/Dir_D/Tiểu luận CN/AgentWazuh/config/known_devices.json`.
-   - AgentWazuh Security Map & Correlation Engine lập tức nhận diện đúng IP và đánh giá Risk Score chính xác!
-
-3. **Bắn Log Syslog UDP 514 Tới Wazuh Manager Thật**:
-   - Chọn Kịch bản tấn công (SSH Brute Force, Nmap Port Scan, Ransomware, DDoS).
-   - Chọn Thiết bị Nguồn & Thiết bị Đích trực tiếp từ sơ đồ.
-   - Nhấp **BẮT ĐẦU** → LogInjector bắn dồn dập các gói UDP Syslog tới `172.16.175.145:514`.
-   - Wazuh Manager nhận log, kích hoạt Ruleset thật & đẩy Alert thật cho AgentWazuh AI phân tích!
+### 🔴 Lỗi 2: Không đồng bộ được thiết bị sang AgentWazuh
+- **Nguyên nhân**: `AgentWazuh/config/known_devices.json` hoặc IP Wazuh Manager trong `topology.json` bị lệch.
+- **Khắc phục**: Chạy tính năng 1-Click Export từ UI Port 9090 hoặc chạy script đồng bộ `/tmp/update_wazuh_210_monitoring.py`.

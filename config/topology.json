@@ -29,8 +29,8 @@
       "os": "FortiOS 7.2 (HA Active)",
       "criticality": 10,
       "syslog_format": "auto",
-      "x": -199.0,
-      "y": -531.0,
+      "x": -195.0,
+      "y": -483.0,
       "verified": true,
       "open_ports": [
         22,
@@ -51,8 +51,8 @@
       "os": "FortiOS 7.2 (HA Standby)",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": 184.0,
-      "y": -581.0,
+      "x": 199.0,
+      "y": -536.0,
       "verified": true,
       "open_ports": [
         22,
@@ -71,8 +71,8 @@
       "os": "Cisco NX-OS",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": -230.0,
-      "y": -240.0,
+      "x": -197.0,
+      "y": -249.0,
       "verified": true,
       "open_ports": [
         22,
@@ -737,8 +737,8 @@
       "os": "Windows 11",
       "criticality": 5,
       "syslog_format": "auto",
-      "x": -494.0,
-      "y": -945.0,
+      "x": -655.0,
+      "y": -1088.0,
       "verified": true,
       "open_ports": [
         22,

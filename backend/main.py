@@ -42,6 +42,14 @@ app.include_router(container_router)
 def index_page():
     return FileResponse(str(FRONTEND_DIR / "index.html"))
 
+# Fallback for root static requests (e.g. /style.css, /js/...)
+@app.get("/{filepath:path}")
+def serve_root_static(filepath: str):
+    target = FRONTEND_DIR / filepath
+    if target.exists() and target.is_file():
+        return FileResponse(str(target))
+    return HTMLResponse("Not Found", status_code=404)
+
 if __name__ == "__main__":
     print("🚀 Starting WazuhSim Server on http://0.0.0.0:9090...")
-    uvicorn.run("backend.main:app", host="0.0.0.0", port=9090, reload=True)
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=9090, reload=False)
