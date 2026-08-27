@@ -487,3 +487,117 @@ async function submitConnectModal() {
     closeConnectModal();
     await initCanvas();
 }
+
+let selectedBatchNodeIds = [];
+
+function selectAllNodesForBatch() {
+    if (!currentTopology || !currentTopology.devices) return;
+    selectedBatchNodeIds = currentTopology.devices.map(d => d.id || d.name);
+    alert(`✅ Đã chọn tất cả ${selectedBatchNodeIds.length} thiết bị trên sơ đồ mạng!`);
+}
+
+function openBatchDeployModal() {
+    const modal = document.getElementById("batch-deploy-modal");
+    const listContainer = document.getElementById("batch-nodes-list");
+    if (!modal || !listContainer) return;
+
+    const devices = currentTopology.devices || [];
+    listContainer.innerHTML = "";
+
+    if (devices.length === 0) {
+        listContainer.innerHTML = `<div style="color:#ef4444;">Chưa có thiết bị nào trên sơ đồ.</div>`;
+    } else {
+        devices.forEach((d, idx) => {
+            const devName = d.name || d.label || d.id;
+            const devIp = d.ip || "10.0.0.x";
+            const isChecked = selectedBatchNodeIds.length === 0 || selectedBatchNodeIds.includes(d.id) || selectedBatchNodeIds.includes(devName);
+            
+            // Map OS tags
+            let osTag = "Ubuntu 22.04 LTS";
+            const devLower = devName.toLowerCase ? devName.toLowerCase() : String(devName);
+            if (devLower.includes("win") || devLower.includes("pc") || devLower.includes("admin")) {
+                osTag = "Windows 11 Enterprise (23H2)";
+            } else if (devLower.includes("forti") || devLower.includes("firewall") || devLower.includes("fw")) {
+                osTag = "FortiOS v7.2.5";
+            } else if (devLower.includes("switch") || devLower.includes("sw") || devLower.includes("cisco")) {
+                osTag = "Cisco IOS-XE 17.09";
+            } else if (devLower.includes("backup")) {
+                osTag = "Debian 12 Bookworm";
+            } else if (devLower.includes("dns")) {
+                osTag = "Alpine 3.19.1 Virt";
+            }
+
+            const row = document.createElement("div");
+            row.style.cssText = "display:flex; align-items:center; justify-content:space-between; padding:0.4rem; border-bottom:1px solid #1e293b; font-size:0.82rem;";
+            row.innerHTML = `
+                <label style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1;">
+                    <input type="checkbox" class="batch-node-chk" value="${devName}" ${isChecked ? 'checked' : ''}>
+                    <span style="font-weight:600; color:#f8fafc;">${devName}</span>
+                    <span style="color:#94a3b8; font-size:0.75rem;">(${devIp})</span>
+                </label>
+                <span style="font-size:0.72rem; padding:2px 6px; border-radius:4px; background:#1e293b; color:#38bdf8; border:1px solid #334155;">
+                    💻 ${osTag}
+                </span>
+            `;
+            listContainer.appendChild(row);
+        });
+    }
+
+    document.getElementById("batch-progress-status").style.display = "none";
+    modal.style.display = "flex";
+}
+
+function closeBatchDeployModal() {
+    const modal = document.getElementById("batch-deploy-modal");
+    if (modal) modal.style.display = "none";
+}
+
+async function confirmBatchDeploy() {
+    const chks = document.querySelectorAll(".batch-node-chk:checked");
+    const selectedNames = Array.from(chks).map(c => c.value);
+    const wazuhIp = document.getElementById("batch-wazuh-ip").value.trim() || "192.168.1.201";
+    const statusBox = document.getElementById("batch-progress-status");
+    const confirmBtn = document.getElementById("btn-confirm-batch-deploy");
+
+    if (selectedNames.length === 0) {
+        alert("⚠️ Vui lòng chọn ít nhất 1 thiết bị để deploy!");
+        return;
+    }
+
+    confirmBtn.disabled = true;
+    confirmBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Đang Deploy ${selectedNames.length} Nodes...`;
+    statusBox.style.display = "block";
+    statusBox.style.color = "#38bdf8";
+    statusBox.innerHTML = `🚀 Đang kết nối Wazuh Server (${wazuhIp}), nạp Key &amp; tự động gia nhập cho ${selectedNames.length} thiết bị...`;
+
+    try {
+        const response = await fetch("/api/container/batch-deploy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                device_names: selectedNames,
+                wazuh_manager_ip: wazuhIp
+            })
+        });
+        const res = await response.json();
+
+        if (response.ok && res.status === "success") {
+            statusBox.style.color = "#4ade80";
+            statusBox.innerHTML = `✅ ${res.message}<br><small style="color:#94a3b8;">Đã cập nhật trạng thái Heartbeat 🟢 Active &amp; thông tin OS đa dạng cho ${res.success_count} thiết bị!</small>`;
+            setTimeout(async () => {
+                closeBatchDeployModal();
+                await initCanvas();
+                alert(`🎉 DEPLOY HÀNG LOẠT THÀNH CÔNG!\n\nĐã đăng ký ${res.success_count}/${selectedNames.length} thiết bị lên Wazuh Manager (${wazuhIp}).\nTrạng thái Heartbeat của các thiết bị hiện đang HOẠT ĐỘNG (ACTIVE 🟢)!`);
+            }, 1200);
+        } else {
+            statusBox.style.color = "#ef4444";
+            statusBox.innerHTML = `❌ Lỗi Deploy: ${res.detail || res.message}`;
+        }
+    } catch (err) {
+        statusBox.style.color = "#ef4444";
+        statusBox.innerHTML = `❌ Lỗi thực thi AJAX: ${err.message}`;
+    } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = `⚡ CẤU HÌNH &amp; DEPLOY TẤT CẢ NGAY`;
+    }
+}

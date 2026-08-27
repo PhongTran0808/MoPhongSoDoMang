@@ -6,7 +6,7 @@
       "ip": "8.8.8.8",
       "secondary_ip": null,
       "type": "cloud",
-      "os": "Public WAN Cloud",
+      "os": "Ubuntu 22.04.3 LTS",
       "criticality": 2,
       "syslog_format": "auto",
       "x": 6.0,
@@ -18,7 +18,15 @@
         53
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 8.8
     },
     {
       "id": "dev_dc_fg600f_1",
@@ -26,7 +34,7 @@
       "ip": "172.16.175.200",
       "secondary_ip": "172.16.175.201",
       "type": "firewall",
-      "os": "FortiOS 7.2 (HA Active)",
+      "os": "FortiOS v7.2.5 build1523 (GA)",
       "criticality": 10,
       "syslog_format": "auto",
       "x": -195.0,
@@ -40,7 +48,15 @@
         4500
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "FortiOS",
+      "os_version": "FortiOS v7.2.5 build1523 (GA)",
+      "kernel": "FortiGate Kernel 4.19",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 6.8
     },
     {
       "id": "dev_dc_fg600f_2",
@@ -48,7 +64,7 @@
       "ip": "172.16.175.201",
       "secondary_ip": null,
       "type": "firewall",
-      "os": "FortiOS 7.2 (HA Standby)",
+      "os": "FortiOS v7.2.5 build1523 (GA)",
       "criticality": 9,
       "syslog_format": "auto",
       "x": 199.0,
@@ -60,7 +76,15 @@
         443
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "FortiOS",
+      "os_version": "FortiOS v7.2.5 build1523 (GA)",
+      "kernel": "FortiGate Kernel 4.19",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 6.8
     },
     {
       "id": "dev_dc_spine1",
@@ -68,7 +92,7 @@
       "ip": "172.16.175.202",
       "secondary_ip": null,
       "type": "switch",
-      "os": "Cisco NX-OS",
+      "os": "Ubuntu 22.04.3 LTS",
       "criticality": 9,
       "syslog_format": "auto",
       "x": -197.0,
@@ -80,7 +104,15 @@
         443
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 8.8
     },
     {
       "id": "dev_dc_spine2",
@@ -88,7 +120,7 @@
       "ip": "172.16.175.203",
       "secondary_ip": null,
       "type": "switch",
-      "os": "Cisco NX-OS",
+      "os": "Ubuntu 22.04.3 LTS",
       "criticality": 9,
       "syslog_format": "auto",
       "x": 171.0,
@@ -100,7 +132,15 @@
         443
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 2.8
     },
     {
       "id": "dev_dmz_sw",
@@ -108,7 +148,7 @@
       "ip": "172.16.175.209",
       "secondary_ip": null,
       "type": "switch",
-      "os": "Cisco IOS-XE",
+      "os": "Ubuntu 22.04.3 LTS",
       "criticality": 7,
       "syslog_format": "auto",
       "x": -481.0,
@@ -120,7 +160,15 @@
         443
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 5.8
     },
     {
       "id": "dev_dmz_srv1",
@@ -128,7 +176,7 @@
       "ip": "172.16.175.210",
       "secondary_ip": null,
       "type": "server",
-      "os": "Ubuntu 22.04 LTS (Nginx)",
+      "os": "Ubuntu 22.04.3 LTS (Jammy)",
       "criticality": 8,
       "syslog_format": "auto",
       "x": -776.0,
@@ -140,7 +188,15 @@
         22
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS (Jammy)",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 2.8
     },
     {
       "id": "dev_dmz_srv2",
@@ -148,7 +204,7 @@
       "ip": "172.16.175.211",
       "secondary_ip": null,
       "type": "server",
-      "os": "Ubuntu 22.04 LTS",
+      "os": "Debian GNU/Linux 12 (Bookworm)",
       "criticality": 7,
       "syslog_format": "auto",
       "x": -772.0,
@@ -160,7 +216,15 @@
         22
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Debian Linux",
+      "os_version": "Debian GNU/Linux 12 (Bookworm)",
+      "kernel": "Linux 6.1.0-13-amd64",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 10.8
     },
     {
       "id": "dev_infra_sw",
@@ -168,7 +232,7 @@
       "ip": "172.16.175.219",
       "secondary_ip": null,
       "type": "switch",
-      "os": "Cisco IOS-XE",
+      "os": "Ubuntu 22.04.3 LTS",
       "criticality": 7,
       "syslog_format": "auto",
       "x": -783.0,
@@ -179,7 +243,15 @@
         80
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 7.8
     },
     {
       "id": "dev_infra_dns",
@@ -187,7 +259,7 @@
       "ip": "172.16.175.220",
       "secondary_ip": null,
       "type": "server",
-      "os": "Windows Server 2022 (DNS)",
+      "os": "Alpine Linux 3.19.1 Virt",
       "criticality": 9,
       "syslog_format": "auto",
       "x": -1012.0,
@@ -198,7 +270,15 @@
         5353
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Alpine Linux",
+      "os_version": "Alpine Linux 3.19.1 Virt",
+      "kernel": "Linux 6.6.14-0-virt",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 9.8
     },
     {
       "id": "dev_infra_dhcp",
@@ -206,7 +286,7 @@
       "ip": "172.16.175.221",
       "secondary_ip": null,
       "type": "server",
-      "os": "Windows Server 2022 (DHCP)",
+      "os": "Debian GNU/Linux 11 (Bullseye)",
       "criticality": 9,
       "syslog_format": "auto",
       "x": -806.0,
@@ -217,7 +297,15 @@
         68
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Debian Linux",
+      "os_version": "Debian GNU/Linux 11 (Bullseye)",
+      "kernel": "Linux 5.10.0-23-amd64",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 11.8
     },
     {
       "id": "dev_infra_r700",
@@ -225,7 +313,7 @@
       "ip": "172.16.175.222",
       "secondary_ip": null,
       "type": "server",
-      "os": "Linux RHEL 9",
+      "os": "Red Hat Enterprise Linux 9.3",
       "criticality": 8,
       "syslog_format": "auto",
       "x": -599.0,
@@ -236,7 +324,15 @@
         443
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "RHEL",
+      "os_version": "Red Hat Enterprise Linux 9.3",
+      "kernel": "Linux 5.14.0-362.el9.x86_64",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 5.8
     },
     {
       "id": "dev_internal_sw",
@@ -244,7 +340,7 @@
       "ip": "172.16.175.229",
       "secondary_ip": null,
       "type": "switch",
-      "os": "Cisco IOS-XE",
+      "os": "Ubuntu 22.04.3 LTS",
       "criticality": 8,
       "syslog_format": "auto",
       "x": 584.0,
@@ -255,7 +351,15 @@
         80
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 5.8
     },
     {
       "id": "dev_mgmt_prtg",
@@ -263,7 +367,7 @@
       "ip": "172.16.175.230",
       "secondary_ip": null,
       "type": "server",
-      "os": "RedHat Enterprise 9",
+      "os": "Ubuntu 22.04.3 LTS",
       "criticality": 9,
       "syslog_format": "auto",
       "x": 973.0,
@@ -276,7 +380,15 @@
         161
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 11.8
     },
     {
       "id": "dev_mgmt_san",
@@ -284,7 +396,7 @@
       "ip": "172.16.175.231",
       "secondary_ip": null,
       "type": "server",
-      "os": "Dell PowerStore OS",
+      "os": "Ubuntu 22.04.3 LTS",
       "criticality": 10,
       "syslog_format": "auto",
       "x": 971.0,
@@ -296,7 +408,15 @@
         8443
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 10.8
     },
     {
       "id": "dev_mgmt_pc",
@@ -304,7 +424,7 @@
       "ip": "172.16.175.232",
       "secondary_ip": null,
       "type": "pc",
-      "os": "Windows 11 Pro Admin",
+      "os": "Windows 11 Enterprise (23H2)",
       "criticality": 7,
       "syslog_format": "auto",
       "x": 984.0,
@@ -315,7 +435,15 @@
         3389
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Windows OS",
+      "os_version": "Windows 11 Enterprise (23H2)",
+      "kernel": "NT 10.0.22631.3007",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 3.8
     },
     {
       "id": "dev_dept_sw",
@@ -323,7 +451,7 @@
       "ip": "172.16.175.240",
       "secondary_ip": null,
       "type": "switch",
-      "os": "Cisco IOS-XE",
+      "os": "Ubuntu 22.04.3 LTS",
       "criticality": 6,
       "syslog_format": "auto",
       "x": -263.0,
@@ -334,7 +462,15 @@
         80
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 12.8
     },
     {
       "id": "dev_pc_pb1",
@@ -342,7 +478,7 @@
       "ip": "172.16.175.241",
       "secondary_ip": null,
       "type": "pc",
-      "os": "Windows 11 Enterprise",
+      "os": "Windows 10 Pro (22H2)",
       "criticality": 4,
       "syslog_format": "auto",
       "x": -476.0,
@@ -353,7 +489,15 @@
         445
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Windows OS",
+      "os_version": "Windows 10 Pro (22H2)",
+      "kernel": "NT 10.0.19045.3930",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 3.8
     },
     {
       "id": "dev_pc_pb2",
@@ -361,7 +505,7 @@
       "ip": "172.16.175.242",
       "secondary_ip": null,
       "type": "pc",
-      "os": "Windows 11 Enterprise",
+      "os": "Windows 11 Enterprise (23H2)",
       "criticality": 4,
       "syslog_format": "auto",
       "x": -340.0,
@@ -372,7 +516,15 @@
         445
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Windows OS",
+      "os_version": "Windows 11 Enterprise (23H2)",
+      "kernel": "NT 10.0.22631",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 6.8
     },
     {
       "id": "dev_pc_pb3",
@@ -380,7 +532,7 @@
       "ip": "172.16.175.243",
       "secondary_ip": null,
       "type": "pc",
-      "os": "Windows 11 Enterprise",
+      "os": "Windows 11 Enterprise (23H2)",
       "criticality": 4,
       "syslog_format": "auto",
       "x": -194.0,
@@ -391,7 +543,15 @@
         445
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Windows OS",
+      "os_version": "Windows 11 Enterprise (23H2)",
+      "kernel": "NT 10.0.22631",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 9.8
     },
     {
       "id": "dev_pc_pb4",
@@ -399,7 +559,7 @@
       "ip": "172.16.175.244",
       "secondary_ip": null,
       "type": "pc",
-      "os": "Windows 11 Enterprise",
+      "os": "Windows 11 Enterprise (23H2)",
       "criticality": 4,
       "syslog_format": "auto",
       "x": 179.0,
@@ -410,7 +570,15 @@
         445
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Windows OS",
+      "os_version": "Windows 11 Enterprise (23H2)",
+      "kernel": "NT 10.0.22631",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 10.8
     },
     {
       "id": "dev_pc_pb5",
@@ -418,7 +586,7 @@
       "ip": "172.16.175.245",
       "secondary_ip": null,
       "type": "pc",
-      "os": "Windows 11 Enterprise",
+      "os": "Windows 11 Enterprise (23H2)",
       "criticality": 4,
       "syslog_format": "auto",
       "x": 335.0,
@@ -429,7 +597,15 @@
         445
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Windows OS",
+      "os_version": "Windows 11 Enterprise (23H2)",
+      "kernel": "NT 10.0.22631",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 5.8
     },
     {
       "id": "dev_pc_pb6",
@@ -437,7 +613,7 @@
       "ip": "172.16.175.246",
       "secondary_ip": null,
       "type": "pc",
-      "os": "Windows 11 Enterprise",
+      "os": "Windows 11 Enterprise (23H2)",
       "criticality": 4,
       "syslog_format": "auto",
       "x": 495.0,
@@ -448,7 +624,15 @@
         445
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Windows OS",
+      "os_version": "Windows 11 Enterprise (23H2)",
+      "kernel": "NT 10.0.22631",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 3.8
     },
     {
       "id": "dev_dr_fg400f",
@@ -456,7 +640,7 @@
       "ip": "172.16.175.250",
       "secondary_ip": null,
       "type": "firewall",
-      "os": "FortiOS 7.2 (DR Site)",
+      "os": "FortiOS v7.0.12 build0520",
       "criticality": 9,
       "syslog_format": "auto",
       "x": -1296.0,
@@ -469,7 +653,15 @@
         500
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "FortiOS",
+      "os_version": "FortiOS v7.0.12 build0520",
+      "kernel": "FortiGate Kernel 4.19",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 12.8
     },
     {
       "id": "dev_dr_sw",
@@ -477,7 +669,7 @@
       "ip": "172.16.175.253",
       "secondary_ip": null,
       "type": "switch",
-      "os": "Cisco IOS-XE",
+      "os": "Ubuntu 22.04.3 LTS",
       "criticality": 7,
       "syslog_format": "auto",
       "x": -1300.0,
@@ -488,7 +680,15 @@
         80
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 2.8
     },
     {
       "id": "dev_dr_qnap",
@@ -496,7 +696,7 @@
       "ip": "172.16.175.251",
       "secondary_ip": null,
       "type": "server",
-      "os": "QuTS hero OS (DR NAS)",
+      "os": "Ubuntu 22.04.3 LTS",
       "criticality": 9,
       "syslog_format": "auto",
       "x": -1420.0,
@@ -507,7 +707,15 @@
         3260
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 7.8
     },
     {
       "id": "dev_dr_dell",
@@ -515,7 +723,7 @@
       "ip": "172.16.175.252",
       "secondary_ip": null,
       "type": "server",
-      "os": "VMware ESXi 8.0 (DR Host)",
+      "os": "AlmaLinux 9.3 (Emerald Puma)",
       "criticality": 9,
       "syslog_format": "auto",
       "x": -1180.0,
@@ -527,7 +735,15 @@
         902
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "AlmaLinux",
+      "os_version": "AlmaLinux 9.3 (Emerald Puma)",
+      "kernel": "Linux 5.14.0-362.el9.x86_64",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 1.8
     },
     {
       "id": "dev_br1_fg60f",
@@ -535,7 +751,7 @@
       "ip": "192.168.10.1",
       "secondary_ip": null,
       "type": "firewall",
-      "os": "FortiOS 7.2 (Branch 1 SD-WAN)",
+      "os": "FortiOS v7.2.4 build1396",
       "criticality": 7,
       "syslog_format": "auto",
       "x": 1300.0,
@@ -548,7 +764,15 @@
         500
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "FortiOS",
+      "os_version": "FortiOS v7.2.4 build1396",
+      "kernel": "FortiGate Kernel 4.19",
+      "arch": "arm64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 4.8
     },
     {
       "id": "dev_br1_switch",
@@ -556,7 +780,7 @@
       "ip": "192.168.10.2",
       "secondary_ip": null,
       "type": "switch",
-      "os": "FortiSwitchOS",
+      "os": "FortiOS v7.2.5 build1523",
       "criticality": 6,
       "syslog_format": "auto",
       "x": 1300.0,
@@ -567,7 +791,15 @@
         80
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "FortiOS",
+      "os_version": "FortiOS v7.2.5 build1523",
+      "kernel": "FortiGate Kernel 4.19",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 6.8
     },
     {
       "id": "dev_br1_ap",
@@ -575,7 +807,7 @@
       "ip": "192.168.10.10",
       "secondary_ip": null,
       "type": "switch",
-      "os": "FortiAP OS",
+      "os": "FortiOS v7.2.5 build1523",
       "criticality": 5,
       "syslog_format": "auto",
       "x": 1200.0,
@@ -586,7 +818,15 @@
         443
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "FortiOS",
+      "os_version": "FortiOS v7.2.5 build1523",
+      "kernel": "FortiGate Kernel 4.19",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 2.8
     },
     {
       "id": "dev_br1_pc",
@@ -594,7 +834,7 @@
       "ip": "192.168.10.100",
       "secondary_ip": null,
       "type": "pc",
-      "os": "Windows 11 Branch 1",
+      "os": "Windows 11 Enterprise (23H2)",
       "criticality": 4,
       "syslog_format": "auto",
       "x": 1400.0,
@@ -605,7 +845,15 @@
         445
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Windows OS",
+      "os_version": "Windows 11 Enterprise (23H2)",
+      "kernel": "NT 10.0.22631",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 9.8
     },
     {
       "id": "dev_br2_fg50f",
@@ -613,7 +861,7 @@
       "ip": "192.168.20.1",
       "secondary_ip": null,
       "type": "firewall",
-      "os": "FortiOS 7.2 (Branch 2 SD-WAN)",
+      "os": "FortiOS v7.0.11 build0489",
       "criticality": 7,
       "syslog_format": "auto",
       "x": 1693.0,
@@ -626,7 +874,15 @@
         500
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "FortiOS",
+      "os_version": "FortiOS v7.0.11 build0489",
+      "kernel": "FortiGate Kernel 4.19",
+      "arch": "arm64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 1.8
     },
     {
       "id": "dev_br2_switch",
@@ -634,7 +890,7 @@
       "ip": "192.168.20.2",
       "secondary_ip": null,
       "type": "switch",
-      "os": "FortiSwitchOS",
+      "os": "FortiOS v7.2.5 build1523",
       "criticality": 6,
       "syslog_format": "auto",
       "x": 1700.0,
@@ -645,7 +901,15 @@
         80
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "FortiOS",
+      "os_version": "FortiOS v7.2.5 build1523",
+      "kernel": "FortiGate Kernel 4.19",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 4.8
     },
     {
       "id": "dev_br2_ap",
@@ -653,7 +917,7 @@
       "ip": "192.168.20.10",
       "secondary_ip": null,
       "type": "switch",
-      "os": "FortiAP OS",
+      "os": "FortiOS v7.2.5 build1523",
       "criticality": 5,
       "syslog_format": "auto",
       "x": 1600.0,
@@ -664,7 +928,15 @@
         443
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "FortiOS",
+      "os_version": "FortiOS v7.2.5 build1523",
+      "kernel": "FortiGate Kernel 4.19",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 7.8
     },
     {
       "id": "dev_br2_pc",
@@ -672,7 +944,7 @@
       "ip": "192.168.20.100",
       "secondary_ip": null,
       "type": "pc",
-      "os": "Windows 11 Branch 2",
+      "os": "Windows 11 Enterprise (23H2)",
       "criticality": 4,
       "syslog_format": "auto",
       "x": 1800.0,
@@ -683,7 +955,15 @@
         445
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Windows OS",
+      "os_version": "Windows 11 Enterprise (23H2)",
+      "kernel": "NT 10.0.22631",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 2.8
     },
     {
       "id": "dev_9947ml",
@@ -691,7 +971,7 @@
       "ip": "172.16.175.238",
       "secondary_ip": null,
       "type": "switch",
-      "os": "Linux",
+      "os": "Cisco IOS XE 17.09.04a",
       "criticality": 5,
       "syslog_format": "auto",
       "x": 348.0,
@@ -703,7 +983,15 @@
         443
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Cisco IOS-XE",
+      "os_version": "Cisco IOS XE 17.09.04a",
+      "kernel": "Cisco Linux 4.4",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 9.8
     },
     {
       "id": "dev_wazuh_vm",
@@ -711,7 +999,7 @@
       "ip": "172.16.175.145",
       "secondary_ip": null,
       "type": "wazuh",
-      "os": "Wazuh SIEM Server 4.14.7 (VMware)",
+      "os": "Ubuntu 22.04.3 LTS",
       "criticality": 10,
       "syslog_format": "auto",
       "x": 971.0,
@@ -726,7 +1014,15 @@
         55000
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Ubuntu Linux",
+      "os_version": "Ubuntu 22.04.3 LTS",
+      "kernel": "Linux 5.15.0-88-generic",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 2.8
     },
     {
       "id": "dev_lx9crn",
@@ -734,7 +1030,7 @@
       "ip": "198.51.100.50",
       "secondary_ip": null,
       "type": "pc",
-      "os": "Windows 11",
+      "os": "Windows 11 Enterprise (23H2)",
       "criticality": 5,
       "syslog_format": "auto",
       "x": -655.0,
@@ -746,7 +1042,15 @@
         443
       ],
       "ha_group": null,
-      "vpn_tunnel": null
+      "vpn_tunnel": null,
+      "os_name": "Windows OS",
+      "os_version": "Windows 11 Enterprise (23H2)",
+      "kernel": "NT 10.0.22631",
+      "arch": "x86_64",
+      "wazuh_status": "active",
+      "status": "active",
+      "heartbeat": "online",
+      "ping_ms": 7.8
     }
   ],
   "links": [
