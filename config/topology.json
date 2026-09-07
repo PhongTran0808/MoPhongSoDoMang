@@ -71,8 +71,8 @@
       "os": "Ubuntu 22.04.3 LTS",
       "criticality": 9,
       "syslog_format": "auto",
-      "x": -197.0,
-      "y": -249.0,
+      "x": -231.0,
+      "y": -258.0,
       "verified": true,
       "open_ports": [
         22,

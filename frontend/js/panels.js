@@ -693,24 +693,37 @@ async function triggerMicroLinuxCheckHashDemo() {
     await actionSimulateCheckHash("Micro-Linux-64MB-Target");
 }
 
-let activeTerminalDevice = "";
+let puttyCommandHistory = [];
+let puttyHistoryIndex = -1;
 
 async function openPuttyTerminalModal(deviceName) {
-    activeTerminalDevice = deviceName || "Micro-Linux-64MB-Target";
+    if (deviceName) activeTerminalDevice = deviceName;
+    if (!activeTerminalDevice) activeTerminalDevice = "Micro-Linux-64MB-Target";
+    
     const modal = document.getElementById("putty-terminal-modal");
     const titleEl = document.getElementById("putty-title");
     const promptEl = document.getElementById("putty-prompt-label");
-    const consoleBox = document.getElementById("putty-console-output");
+    const historyBox = document.getElementById("putty-console-history");
+    const liveCmdEl = document.getElementById("putty-cmd-live");
+    const input = document.getElementById("putty-cmd-input");
     
-    if (!modal || !consoleBox) return;
+    if (!modal || !historyBox) return;
     
-    if (titleEl) titleEl.innerText = `PuTTY SSH / Docker Shell — root@${activeTerminalDevice}:~#`;
+    if (titleEl) titleEl.innerText = `PuTTY SSH Terminal — root@${activeTerminalDevice}:~# (Docker Exec TTY)`;
     if (promptEl) promptEl.innerText = `root@${activeTerminalDevice}:~#`;
     
-    consoleBox.innerHTML = `=== PuTTY SSH / Docker Container TTY ===\n[Connected to ${activeTerminalDevice}]\nType commands below or use Quick Cmds...\n\nroot@${activeTerminalDevice}:~# `;
-    modal.style.display = "flex";
+    historyBox.innerHTML = `<span style="color:#64748b;">=== PuTTY SSH Client v0.78 (Docker Container TTY Session) ===</span>\n` +
+        `<span style="color:#38bdf8;">[Connected to root@${activeTerminalDevice} via docker exec -it]</span>\n` +
+        `<span style="color:#22c55e;">Micro-Linux 64MB Container Active. Type commands directly on prompt line...</span>\n\n`;
+        
+    if (liveCmdEl) liveCmdEl.innerText = "";
+    if (input) input.value = "";
+    puttyHistoryIndex = -1;
     
-    // Auto execute initial diagnostic
+    modal.style.display = "flex";
+    focusPuttyTerminalInput();
+    
+    // Initial auto-diagnostic output
     sendPuttyQuickCmd("uptime && uname -a");
 }
 
@@ -719,41 +732,98 @@ function closePuttyTerminalModal() {
     if (modal) modal.style.display = "none";
 }
 
-async function sendPuttyQuickCmd(cmdStr) {
+function focusPuttyTerminalInput() {
     const input = document.getElementById("putty-cmd-input");
-    if (input) input.value = cmdStr;
-    await submitPuttyCommand();
+    if (input) {
+        setTimeout(() => input.focus(), 50);
+    }
+}
+
+function handlePuttyInputLive(evt) {
+    const liveCmdEl = document.getElementById("putty-cmd-live");
+    const input = document.getElementById("putty-cmd-input");
+    if (liveCmdEl && input) {
+        liveCmdEl.innerText = input.value;
+    }
+    const consoleBox = document.getElementById("putty-console-box");
+    if (consoleBox) consoleBox.scrollTop = consoleBox.scrollHeight;
 }
 
 function handlePuttyInputKey(evt) {
+    const input = document.getElementById("putty-cmd-input");
+    const liveCmdEl = document.getElementById("putty-cmd-live");
+    
     if (evt.key === "Enter") {
+        evt.preventDefault();
         submitPuttyCommand();
+    } else if (evt.key === "ArrowUp") {
+        evt.preventDefault();
+        if (puttyCommandHistory.length > 0) {
+            if (puttyHistoryIndex < puttyCommandHistory.length - 1) {
+                puttyHistoryIndex++;
+            }
+            const cmd = puttyCommandHistory[puttyCommandHistory.length - 1 - puttyHistoryIndex] || "";
+            if (input) input.value = cmd;
+            if (liveCmdEl) liveCmdEl.innerText = cmd;
+        }
+    } else if (evt.key === "ArrowDown") {
+        evt.preventDefault();
+        if (puttyHistoryIndex > 0) {
+            puttyHistoryIndex--;
+            const cmd = puttyCommandHistory[puttyCommandHistory.length - 1 - puttyHistoryIndex] || "";
+            if (input) input.value = cmd;
+            if (liveCmdEl) liveCmdEl.innerText = cmd;
+        } else if (puttyHistoryIndex === 0) {
+            puttyHistoryIndex = -1;
+            if (input) input.value = "";
+            if (liveCmdEl) liveCmdEl.innerText = "";
+        }
     }
+}
+
+async function sendPuttyQuickCmd(cmdStr) {
+    const input = document.getElementById("putty-cmd-input");
+    const liveCmdEl = document.getElementById("putty-cmd-live");
+    if (input) input.value = cmdStr;
+    if (liveCmdEl) liveCmdEl.innerText = cmdStr;
+    await submitPuttyCommand();
 }
 
 async function submitPuttyCommand() {
     const input = document.getElementById("putty-cmd-input");
-    const consoleBox = document.getElementById("putty-console-output");
-    if (!input || !consoleBox) return;
+    const liveCmdEl = document.getElementById("putty-cmd-live");
+    const historyBox = document.getElementById("putty-console-history");
+    const consoleBox = document.getElementById("putty-console-box");
+    
+    if (!input || !historyBox) return;
     
     const cmd = input.value.trim();
+    input.value = "";
+    if (liveCmdEl) liveCmdEl.innerText = "";
+    puttyHistoryIndex = -1;
+    
     if (!cmd) return;
     
-    input.value = "";
-    consoleBox.innerHTML += `${cmd}\n`;
-    consoleBox.scrollTop = consoleBox.scrollHeight;
+    puttyCommandHistory.push(cmd);
+    
+    // Append entered command to history block
+    historyBox.innerHTML += `<div style="margin-bottom:4px;"><span style="color:#38bdf8; font-weight:700;">root@${activeTerminalDevice}:~#</span> <span style="color:#ffffff; font-weight:600;">${cmd}</span></div>`;
+    if (consoleBox) consoleBox.scrollTop = consoleBox.scrollHeight;
     
     try {
         const res = await API.execTerminalCommand(activeTerminalDevice, cmd);
         if (res.status === "success") {
-            consoleBox.innerHTML += `${res.output}\n\nroot@${activeTerminalDevice}:~# `;
+            const outStr = (res.output || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+            historyBox.innerHTML += `<div style="color:#22c55e; margin-bottom:8px;">${outStr}</div>`;
         } else {
-            consoleBox.innerHTML += `🔴 ${res.message || 'Lỗi thực thi'}\n\nroot@${activeTerminalDevice}:~# `;
+            historyBox.innerHTML += `<div style="color:#ef4444; margin-bottom:8px;">🔴 ${res.message || 'Lỗi thực thi'}</div>`;
         }
     } catch (e) {
-        consoleBox.innerHTML += `🔴 Lỗi AJAX: ${e.message || e}\n\nroot@${activeTerminalDevice}:~# `;
+        historyBox.innerHTML += `<div style="color:#ef4444; margin-bottom:8px;">🔴 Lỗi AJAX: ${e.message || e}</div>`;
     }
-    consoleBox.scrollTop = consoleBox.scrollHeight;
+    
+    if (consoleBox) consoleBox.scrollTop = consoleBox.scrollHeight;
+    focusPuttyTerminalInput();
 }
 
 function syncGlobalWazuhIp(ipVal) {
