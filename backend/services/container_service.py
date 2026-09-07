@@ -262,6 +262,18 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
     time.sleep(1.0)
 
     try:
+        # Inject exact OS Profile metadata into container's /etc/os-release so Wazuh Manager registers the correct OS name/version
+        os_prof = get_os_profile_for_device(device_name)
+        os_name = os_prof.get("os_name", "Linux")
+        os_version = os_prof.get("os_version", "Ubuntu 22.04 LTS")
+
+        os_release_str = f'NAME="{os_name}"\nVERSION="{os_version}"\nID={os_name.lower().replace(" ", "_")}\nPRETTY_NAME="{os_name} - {os_version}"'
+        inject_os_cmd = [
+            "docker", "exec", container_name,
+            "sh", "-c", f"cat << 'EOF' > /etc/os-release\n{os_release_str}\nEOF"
+        ]
+        subprocess.run(inject_os_cmd, capture_output=True, text=True, check=False)
+
         # Cấu hình IP Wazuh Manager vào ossec.conf bên trong container
         sed_ip_cmd = [
             "docker", "exec", container_name,

@@ -450,7 +450,7 @@ div.vis-network div.vis-manipulation div.vis-button {
                 <button class="btn-action" onclick="closePuttyTerminalModal()" style="color:#ffffff;"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <!-- Quick Command Toolbar -->
-            <div style="background:#0f172a; border-bottom:1px solid #334155; padding:0.4rem 0.8rem; display:flex; gap:0.4rem; overflow-x:auto;">
+            <div id="putty-hot-cmds" style="background:#0f172a; border-bottom:1px solid #334155; padding:0.4rem 0.8rem; display:flex; gap:0.4rem; overflow-x:auto;">
                 <span style="font-size:0.75rem; color:#94a3b8; align-self:center;">Hot Cmds:</span>
                 <button class="btn-action" onclick="sendPuttyQuickCmd('ls -la')" style="font-size:0.72rem; padding:2px 8px; background:#1e293b; color:#ffffff; border-color:#475569;">ls -la</button>
                 <button class="btn-action" onclick="sendPuttyQuickCmd('ps aux')" style="font-size:0.72rem; padding:2px 8px; background:#1e293b; color:#ffffff; border-color:#475569;">ps aux</button>

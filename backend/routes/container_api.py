@@ -101,6 +101,130 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
         container_name = f"wazuh-agent-{container_name}"
     
     cmd_str = req.command.strip() if req.command else "uptime"
+    device_lower = req.device_name.lower()
+    cmd_lower = cmd_str.lower()
+
+    # --- Cisco CLI Command Handling ---
+    if "cisco" in device_lower or "switch" in device_lower or "router" in device_lower:
+        if "show ip int" in cmd_lower or "show ip interface" in cmd_lower:
+            cisco_out = (
+                f"Interface                  IP-Address      OK? Method Status                Protocol\n"
+                f"GigabitEthernet1/0/1       172.16.175.1    YES NVRAM  up                    up      \n"
+                f"GigabitEthernet1/0/2       172.16.175.2    YES NVRAM  up                    up      \n"
+                f"GigabitEthernet1/0/3       10.0.10.1       YES NVRAM  up                    up      \n"
+                f"Vlan10                     10.0.10.254     YES NVRAM  up                    up      \n"
+                f"Vlan20                     10.0.20.254     YES NVRAM  up                    up      \n"
+                f"Vlan30                     10.0.30.254     YES NVRAM  up                    up      \n"
+                f"Loopback0                  192.168.255.1   YES NVRAM  up                    up      "
+            )
+            return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": cisco_out}
+        elif "show running-config" in cmd_lower or "sh run" in cmd_lower:
+            cisco_out = (
+                f"Building configuration...\n\n"
+                f"Current configuration : 2048 bytes\n"
+                f"!\n"
+                f"version 17.3\n"
+                f"service timestamps debug datetime msec\n"
+                f"service timestamps log datetime msec\n"
+                f"hostname {req.device_name}\n"
+                f"!\n"
+                f"vlan 10,20,30,40,50,60\n"
+                f"!\n"
+                f"interface GigabitEthernet1/0/1\n"
+                f" description Trunk-Link-Core\n"
+                f" switchport mode trunk\n"
+                f"!\n"
+                f"ip default-gateway 172.16.175.254\n"
+                f"end"
+            )
+            return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": cisco_out}
+        elif "show version" in cmd_lower or "sh ver" in cmd_lower:
+            cisco_out = (
+                f"Cisco IOS XE Software, Version 17.3.4a\n"
+                f"Cisco IOS Software [Amsterdam], Catalyst L3 Switch Software (CAT9K-UNIVERSALK9-M)\n"
+                f"Technical Support: http://www.cisco.com/techsupport\n"
+                f"Copyright (c) 1986-2023 by Cisco Systems, Inc.\n\n"
+                f"{req.device_name} uptime is 42 days, 16 hours, 10 minutes\n"
+                f"System returned to ROM by reload\n"
+                f"Model number: C9300-48P\n"
+                f"System serial number: FOC2419L0P1"
+            )
+            return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": cisco_out}
+        elif "show vlan" in cmd_lower:
+            cisco_out = (
+                f"VLAN Name                             Status    Ports\n"
+                f"---- -------------------------------- --------- -------------------------------\n"
+                f"1    default                          active    Gi1/0/1, Gi1/0/2\n"
+                f"10   VLAN10-Sales                     active    Gi1/0/3, Gi1/0/4\n"
+                f"20   VLAN20-Engineering               active    Gi1/0/5, Gi1/0/6\n"
+                f"30   VLAN30-Management                active    Gi1/0/7\n"
+                f"50   VLAN50-DMZ                       active    Gi1/0/8"
+            )
+            return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": cisco_out}
+        elif "show ip route" in cmd_lower:
+            cisco_out = (
+                f"Codes: C - connected, S - static, R - RIP, M - mobile, B - BGP\n\n"
+                f"Gateway of last resort is 172.16.175.254 to network 0.0.0.0\n\n"
+                f"S*    0.0.0.0/0 [1/0] via 172.16.175.254\n"
+                f"C     172.16.175.0/24 is directly connected, GigabitEthernet1/0/1\n"
+                f"C     10.0.10.0/24 is directly connected, Vlan10\n"
+                f"C     10.0.20.0/24 is directly connected, Vlan20"
+            )
+            return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": cisco_out}
+
+    # --- FortiGate CLI Command Handling ---
+    if "forti" in device_lower or "firewall" in device_lower:
+        if "get system status" in cmd_lower:
+            forti_out = (
+                f"Version: FortiGate-600F v7.2.5,build1523,230510 (GA.M)\n"
+                f"Virus-DB: 91.00234(2026-09-07 08:00)\n"
+                f"Extended DB: 91.00234(2026-09-07 08:00)\n"
+                f"IPS-DB: 6.00741(2026-09-07 00:00)\n"
+                f"Serial-Number: FG600F-TK23091045\n"
+                f"HA mode: a-p, cluster index: 0\n"
+                f"Operation Mode: NAT\n"
+                f"System time: Mon Sep  7 12:00:00 2026"
+            )
+            return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": forti_out}
+        elif "show firewall policy" in cmd_lower:
+            forti_out = (
+                f"config firewall policy\n"
+                f"    edit 1\n"
+                f"        set name \"Allow-LAN-to-WAN\"\n"
+                f"        set srcintf \"port2-LAN\"\n"
+                f"        set dstintf \"port1-WAN\"\n"
+                f"        set action accept\n"
+                f"        set schedule \"always\"\n"
+                f"        set service \"ALL\"\n"
+                f"        set nat enable\n"
+                f"    next\n"
+                f"end"
+            )
+            return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": forti_out}
+
+    # --- Windows Command Handling ---
+    if "win" in device_lower or "pc" in device_lower or "admin" in device_lower or "manager" in device_lower:
+        if "ipconfig" in cmd_lower:
+            win_out = (
+                f"Windows IP Configuration\n\n"
+                f"Ethernet adapter Ethernet 1:\n\n"
+                f"   Connection-specific DNS Suffix  . : localdomain\n"
+                f"   IPv4 Address. . . . . . . . . . . : 172.16.175.245\n"
+                f"   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n"
+                f"   Default Gateway . . . . . . . . . : 172.16.175.254\n"
+                f"   DHCP Server . . . . . . . . . . . : 172.16.175.200"
+            )
+            return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": win_out}
+        elif "get-process" in cmd_lower:
+            win_out = (
+                f"Handles  NPM(K)    PM(K)      WS(K)     CPU(s)     Id  ProcessName\n"
+                f"-------  ------    -----      -----     ------     --  -----------\n"
+                f"    450      24    35400      48200      12.45   1042  wazuh-agent\n"
+                f"    210      15    12800      18400       4.12   3820  powershell\n"
+                f"    890      42    92400     110200      45.80    884  explorer"
+            )
+            return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": win_out}
+
     first_word = cmd_str.split()[0] if cmd_str else ""
     
     # Tự động khởi tạo file thực thi /usr/bin/ip bên trong Docker Container nếu chưa có lệnh iproute2

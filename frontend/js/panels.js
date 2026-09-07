@@ -739,6 +739,88 @@ async function triggerMicroLinuxCheckHashDemo() {
     await actionSimulateCheckHash("Micro-Linux-64MB-Target");
 }
 
+function getDeviceCliConfig(deviceName) {
+    const nameLower = (deviceName || "").toLowerCase();
+    
+    // Cisco Switches & Routers
+    if (nameLower.includes("cisco") || nameLower.includes("switch") || nameLower.includes("router")) {
+        return {
+            cliType: "cisco",
+            prompt: `${deviceName}#`,
+            title: `PuTTY SSH Console — ${deviceName} (Cisco IOS-XE v17.3.4a)`,
+            welcome: `<span style="color:#94a3b8;">=== PuTTY SSH Client v0.78 (Cisco IOS-XE Console Session) ===</span>\n` +
+                     `<span style="color:#ffffff;">[Connected to ${deviceName} via SSH v2 (Port 22)]</span>\n` +
+                     `<span style="color:#cbd5e1;">Cisco IOS XE Software, Version 17.3.4a (RELEASE SOFTWARE)</span>\n` +
+                     `<span style="color:#94a3b8;">Type 'show ?' or 'help' for a list of available commands.</span>\n\n`,
+            hotCmds: [
+                { label: "show ip int brief", cmd: "show ip int brief" },
+                { label: "show running-config", cmd: "show running-config" },
+                { label: "show version", cmd: "show version" },
+                { label: "show vlan brief", cmd: "show vlan brief" },
+                { label: "show ip route", cmd: "show ip route" }
+            ],
+            initialCmd: "show version"
+        };
+    }
+    
+    // FortiGate Firewalls
+    if (nameLower.includes("forti") || nameLower.includes("firewall")) {
+        return {
+            cliType: "fortigate",
+            prompt: `${deviceName} #`,
+            title: `PuTTY SSH Console — ${deviceName} (FortiOS v7.2.5 GA)`,
+            welcome: `<span style="color:#94a3b8;">=== PuTTY SSH Client v0.78 (FortiOS CLI Session) ===</span>\n` +
+                     `<span style="color:#ffffff;">[Connected to ${deviceName} via SSH (Port 22)]</span>\n` +
+                     `<span style="color:#cbd5e1;">FortiGate-600F v7.2.5,build1523,230510 (GA.M)</span>\n` +
+                     `<span style="color:#94a3b8;">Type 'get ?' or 'show ?' for FortiOS command tree.</span>\n\n`,
+            hotCmds: [
+                { label: "get system status", cmd: "get system status" },
+                { label: "show firewall policy", cmd: "show firewall policy" },
+                { label: "get router info routing-table all", cmd: "get router info routing-table all" },
+                { label: "diagnose sys top", cmd: "diagnose sys top" }
+            ],
+            initialCmd: "get system status"
+        };
+    }
+    
+    // Windows Endpoints & PCs
+    if (nameLower.includes("win") || nameLower.includes("pc") || nameLower.includes("admin") || nameLower.includes("manager")) {
+        return {
+            cliType: "windows",
+            prompt: `PS C:\\Users\\Administrator>`,
+            title: `PuTTY SSH Console / PowerShell — ${deviceName} (Windows 11 / Server)`,
+            welcome: `<span style="color:#94a3b8;">=== PuTTY SSH Client v0.78 (Windows PowerShell / WinRM TTY) ===</span>\n` +
+                     `<span style="color:#ffffff;">[Connected to ${deviceName} via WinRM / SSH (Port 5985/22)]</span>\n` +
+                     `<span style="color:#cbd5e1;">Windows PowerShell v5.1 / Windows 11 Enterprise (23H2)</span>\n\n`,
+            hotCmds: [
+                { label: "ipconfig /all", cmd: "ipconfig /all" },
+                { label: "Get-Process", cmd: "Get-Process" },
+                { label: "Get-Service", cmd: "Get-Service" },
+                { label: "netstat -ano", cmd: "netstat -ano" }
+            ],
+            initialCmd: "ipconfig /all"
+        };
+    }
+    
+    // Linux Servers & Targets (Default)
+    return {
+        cliType: "linux",
+        prompt: `root@${deviceName}:~#`,
+        title: `PuTTY SSH Terminal — root@${deviceName}:~# (Docker Exec TTY)`,
+        welcome: `<span style="color:#94a3b8;">=== PuTTY SSH Client v0.78 (Docker Container TTY Session) ===</span>\n` +
+                 `<span style="color:#ffffff;">[Connected to root@${deviceName} via docker exec -it]</span>\n` +
+                 `<span style="color:#cbd5e1;">Micro-Linux 64MB Container Active. Type commands directly on prompt line...</span>\n\n`,
+        hotCmds: [
+            { label: "ls -la", cmd: "ls -la" },
+            { label: "ps aux", cmd: "ps aux" },
+            { label: "ip a", cmd: "ip a" },
+            { label: "client.keys", cmd: "cat /var/ossec/etc/client.keys" },
+            { label: "wazuh status", cmd: "/var/ossec/bin/wazuh-control status" }
+        ],
+        initialCmd: "uptime && uname -a"
+    };
+}
+
 let puttyCommandHistory = [];
 let puttyHistoryIndex = -1;
 
@@ -751,15 +833,23 @@ async function openPuttyTerminalModal(deviceName) {
     const promptEl = document.getElementById("putty-prompt-label");
     const historyBox = document.getElementById("putty-console-history");
     const input = document.getElementById("putty-cmd-input");
+    const hotCmdsBox = document.getElementById("putty-hot-cmds");
     
     if (!modal || !historyBox) return;
     
-    if (titleEl) titleEl.innerText = `PuTTY SSH Terminal — root@${activeTerminalDevice}:~# (Docker Exec TTY)`;
-    if (promptEl) promptEl.innerText = `root@${activeTerminalDevice}:~#`;
+    const cliConfig = getDeviceCliConfig(activeTerminalDevice);
     
-    historyBox.innerHTML = `<span style="color:#94a3b8;">=== PuTTY SSH Client v0.78 (Docker Container TTY Session) ===</span>\n` +
-        `<span style="color:#ffffff;">[Connected to root@${activeTerminalDevice} via docker exec -it]</span>\n` +
-        `<span style="color:#cbd5e1;">Micro-Linux 64MB Container Active. Type commands directly on prompt line...</span>\n\n`;
+    if (titleEl) titleEl.innerText = cliConfig.title;
+    if (promptEl) promptEl.innerText = cliConfig.prompt;
+    historyBox.innerHTML = cliConfig.welcome;
+    
+    if (hotCmdsBox) {
+        let btnsHtml = '<span style="font-size:0.75rem; color:#94a3b8; align-self:center;">Hot Cmds:</span>';
+        cliConfig.hotCmds.forEach(item => {
+            btnsHtml += `<button class="btn-action" onclick="sendPuttyQuickCmd('${item.cmd}')" style="font-size:0.72rem; padding:2px 8px; background:#1e293b; color:#ffffff; border-color:#475569;">${item.label}</button>`;
+        });
+        hotCmdsBox.innerHTML = btnsHtml;
+    }
         
     if (input) input.value = "";
     puttyHistoryIndex = -1;
@@ -767,18 +857,20 @@ async function openPuttyTerminalModal(deviceName) {
     modal.style.display = "flex";
     focusPuttyTerminalInput();
 
-    // Ensure Docker container is created & running
-    try {
-        const st = await API.getContainerStatus(activeTerminalDevice);
-        if (!st.exists || st.status !== "running") {
-            await API.createContainer(activeTerminalDevice);
+    // Ensure Docker container is created & running (for linux endpoints)
+    if (cliConfig.cliType === "linux") {
+        try {
+            const st = await API.getContainerStatus(activeTerminalDevice);
+            if (!st.exists || st.status !== "running") {
+                await API.createContainer(activeTerminalDevice);
+            }
+        } catch(e) {
+            console.log("Container check on terminal open:", e);
         }
-    } catch(e) {
-        console.log("Container check on terminal open:", e);
     }
     
     // Initial auto-diagnostic output
-    sendPuttyQuickCmd("uptime && uname -a");
+    sendPuttyQuickCmd(cliConfig.initialCmd);
 }
 
 function closePuttyTerminalModal() {
@@ -843,6 +935,9 @@ async function submitPuttyCommand() {
     
     if (!input || !historyBox) return;
     
+    const cliConfig = getDeviceCliConfig(activeTerminalDevice);
+    const activePrompt = cliConfig.prompt;
+    
     const cmd = input.value.trim();
     input.value = "";
     puttyHistoryIndex = -1;
@@ -851,7 +946,7 @@ async function submitPuttyCommand() {
     if (!cmd) {
         const emptyLine = document.createElement("div");
         emptyLine.style.marginBottom = "4px";
-        emptyLine.innerHTML = `<span style="color:#ffffff; font-weight:700;">root@${activeTerminalDevice}:~#</span>`;
+        emptyLine.innerHTML = `<span style="color:#ffffff; font-weight:700;">${activePrompt}</span>`;
         historyBox.appendChild(emptyLine);
         if (consoleBox) consoleBox.scrollTop = consoleBox.scrollHeight;
         focusPuttyTerminalInput();
@@ -865,7 +960,7 @@ async function submitPuttyCommand() {
     // Append entered command cleanly using appendChild (Classic Black & White PuTTY colors)
     const cmdDiv = document.createElement("div");
     cmdDiv.style.marginBottom = "4px";
-    cmdDiv.innerHTML = `<span style="color:#ffffff; font-weight:700;">root@${activeTerminalDevice}:~#</span> <span style="color:#ffffff; font-weight:600;">${escapeHtml(cmd)}</span>`;
+    cmdDiv.innerHTML = `<span style="color:#ffffff; font-weight:700;">${activePrompt}</span> <span style="color:#ffffff; font-weight:600;">${escapeHtml(cmd)}</span>`;
     historyBox.appendChild(cmdDiv);
     
     if (consoleBox) consoleBox.scrollTop = consoleBox.scrollHeight;
