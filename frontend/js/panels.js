@@ -757,15 +757,25 @@ async function openPuttyTerminalModal(deviceName) {
     if (titleEl) titleEl.innerText = `PuTTY SSH Terminal — root@${activeTerminalDevice}:~# (Docker Exec TTY)`;
     if (promptEl) promptEl.innerText = `root@${activeTerminalDevice}:~#`;
     
-    historyBox.innerHTML = `<span style="color:#64748b;">=== PuTTY SSH Client v0.78 (Docker Container TTY Session) ===</span>\n` +
-        `<span style="color:#38bdf8;">[Connected to root@${activeTerminalDevice} via docker exec -it]</span>\n` +
-        `<span style="color:#22c55e;">Micro-Linux 64MB Container Active. Type commands directly on prompt line...</span>\n\n`;
+    historyBox.innerHTML = `<span style="color:#94a3b8;">=== PuTTY SSH Client v0.78 (Docker Container TTY Session) ===</span>\n` +
+        `<span style="color:#ffffff;">[Connected to root@${activeTerminalDevice} via docker exec -it]</span>\n` +
+        `<span style="color:#cbd5e1;">Micro-Linux 64MB Container Active. Type commands directly on prompt line...</span>\n\n`;
         
     if (input) input.value = "";
     puttyHistoryIndex = -1;
     
     modal.style.display = "flex";
     focusPuttyTerminalInput();
+
+    // Ensure Docker container is created & running
+    try {
+        const st = await API.getContainerStatus(activeTerminalDevice);
+        if (!st.exists || st.status !== "running") {
+            await API.createContainer(activeTerminalDevice);
+        }
+    } catch(e) {
+        console.log("Container check on terminal open:", e);
+    }
     
     // Initial auto-diagnostic output
     sendPuttyQuickCmd("uptime && uname -a");
@@ -837,16 +847,25 @@ async function submitPuttyCommand() {
     input.value = "";
     puttyHistoryIndex = -1;
     
-    if (!cmd) return;
+    // Support empty Enter to create a new prompt line feed (standard PuTTY terminal behavior)
+    if (!cmd) {
+        const emptyLine = document.createElement("div");
+        emptyLine.style.marginBottom = "4px";
+        emptyLine.innerHTML = `<span style="color:#ffffff; font-weight:700;">root@${activeTerminalDevice}:~#</span>`;
+        historyBox.appendChild(emptyLine);
+        if (consoleBox) consoleBox.scrollTop = consoleBox.scrollHeight;
+        focusPuttyTerminalInput();
+        return;
+    }
     
     puttyCommandHistory.push(cmd);
     
     const escapeHtml = (str) => (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    // Append entered command cleanly using appendChild so focus and input state remain 100% active
+    // Append entered command cleanly using appendChild (Classic Black & White PuTTY colors)
     const cmdDiv = document.createElement("div");
     cmdDiv.style.marginBottom = "4px";
-    cmdDiv.innerHTML = `<span style="color:#38bdf8; font-weight:700;">root@${activeTerminalDevice}:~#</span> <span style="color:#ffffff; font-weight:600;">${escapeHtml(cmd)}</span>`;
+    cmdDiv.innerHTML = `<span style="color:#ffffff; font-weight:700;">root@${activeTerminalDevice}:~#</span> <span style="color:#ffffff; font-weight:600;">${escapeHtml(cmd)}</span>`;
     historyBox.appendChild(cmdDiv);
     
     if (consoleBox) consoleBox.scrollTop = consoleBox.scrollHeight;
@@ -856,7 +875,7 @@ async function submitPuttyCommand() {
         const outDiv = document.createElement("div");
         outDiv.style.marginBottom = "8px";
         if (res.status === "success") {
-            outDiv.style.color = "#22c55e";
+            outDiv.style.color = "#ffffff";
             outDiv.innerHTML = escapeHtml(res.output || "");
         } else {
             outDiv.style.color = "#ef4444";

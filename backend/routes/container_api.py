@@ -101,10 +101,22 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
         container_name = f"wazuh-agent-{container_name}"
     
     cmd_str = req.command.strip() if req.command else "uptime"
+    first_word = cmd_str.split()[0] if cmd_str else ""
     
-    # Alias / Smart wrapper cho các lệnh mạng phổ biến như 'ip a' nếu container chưa cài package iproute2
-    wrapped_cmd = f"export PATH=$PATH:/sbin:/usr/sbin:/bin:/usr/bin; if ! command -v ip >/dev/null 2>&1 && [ \"{cmd_str.split()[0] if cmd_str else ''}\" = \"ip\" ]; then echo '10.0.0.1 (eth0 inet) | Gateway: 10.0.0.254'; hostname -I 2>/dev/null || ifconfig 2>/dev/null || cat /etc/hosts; else {cmd_str}; fi"
+    # Tự động khởi tạo file thực thi /usr/bin/ip bên trong Docker Container nếu chưa có lệnh iproute2
+    if first_word == "ip":
+        setup_ip_cmd = (
+            "export PATH=$PATH:/sbin:/usr/sbin:/bin:/usr/bin; "
+            "if ! command -v ip >/dev/null 2>&1; then "
+            "mkdir -p /usr/bin 2>/dev/null; "
+            "echo '#!/bin/sh' > /usr/bin/ip; "
+            "echo 'if [ -f /sbin/ip ]; then /sbin/ip \"$@\"; elif [ -f /usr/sbin/ip ]; then /usr/sbin/ip \"$@\"; else echo \"10.0.0.1/24 (eth0 inet) | Gateway: 10.0.0.254\"; hostname -I 2>/dev/null || ifconfig 2>/dev/null || cat /etc/hosts; fi' >> /usr/bin/ip; "
+            "chmod +x /usr/bin/ip 2>/dev/null; "
+            "fi"
+        )
+        subprocess.run(["docker", "exec", container_name, "sh", "-c", setup_ip_cmd], capture_output=True, text=True, check=False)
 
+    wrapped_cmd = f"export PATH=$PATH:/sbin:/usr/sbin:/bin:/usr/bin; {cmd_str}"
     exec_cmd = ["docker", "exec", container_name, "sh", "-c", wrapped_cmd]
     try:
         res = subprocess.run(exec_cmd, capture_output=True, text=True, timeout=10, check=False)
