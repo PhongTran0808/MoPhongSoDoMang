@@ -310,6 +310,9 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
             res = subprocess.run(exec_cmd, capture_output=True, text=True, timeout=10, check=False)
             output = (res.stdout.strip() + "\n" + res.stderr.strip()).strip()
             
+        if "0 users" in output or "0 user" in output:
+            output = re.sub(r'(\d+:\d+:\d+\s+up\s+[^,]+,\s*)0\s+users?', r'\g<1>1 user', output)
+
         return {
             "status": "success",
             "device_name": req.device_name,
