@@ -116,7 +116,7 @@ def get_os_profile_for_device(device_name: str) -> Dict[str, str]:
         return {"os_name": "Windows OS", "os_version": "Windows 11 Enterprise (23H2)", "kernel": "NT 10.0.22631", "arch": "x86_64"}
     elif "forti" in dev_lower or "firewall" in dev_lower or "fw" in dev_lower:
         return {"os_name": "FortiOS", "os_version": "FortiOS v7.2.5 build1523", "kernel": "FortiGate Kernel 4.19", "arch": "x86_64"}
-    elif "switch" in dev_lower or "sw" in dev_lower or "cisco" in dev_lower:
+    elif "switch" in dev_lower or "sw" in dev_lower or "cisco" in dev_lower or "catalyst" in dev_lower or "nexus" in dev_lower or "cat" in dev_lower:
         return {"os_name": "Cisco IOS-XE", "os_version": "Cisco IOS XE 17.09.04a", "kernel": "Cisco Linux 4.4", "arch": "x86_64"}
     else:
         return {"os_name": "Ubuntu Linux", "os_version": "Ubuntu 22.04.3 LTS", "kernel": "Linux 5.15.0-88-generic", "arch": "x86_64"}
@@ -244,7 +244,7 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
             "message": f"☁️ Node '{device_name}' là phân vùng Đám mây / Internet (Outside WAN). Phân vùng ngoài biên này không thể Deploy Agent Wazuh hay khởi tạo Docker!"
         }
 
-    is_appliance = any(k in name_lower for k in ["fortigate", "cisco", "firewall", "router", "switch", "forti"])
+    is_appliance = any(k in name_lower for k in ["fortigate", "cisco", "firewall", "router", "switch", "forti", "catalyst", "nexus", "cat"])
     if is_appliance:
         return {
             "status": "warning",

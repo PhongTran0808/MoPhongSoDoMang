@@ -147,7 +147,7 @@ async function renderDevicePropertyPanel(dev) {
     const nameLower = (dev.name || "").toLowerCase();
     const typeLower = (dev.type || "").toLowerCase();
     const isCloud = typeLower === "cloud" || typeLower === "internet" || typeLower === "wan" || nameLower.includes("cloud") || nameLower.includes("internet");
-    const isAppliance = typeLower === "firewall" || typeLower === "router" || typeLower === "switch" || nameLower.includes("forti") || nameLower.includes("cisco");
+    const isAppliance = typeLower === "firewall" || typeLower === "router" || typeLower === "switch" || nameLower.includes("forti") || nameLower.includes("cisco") || nameLower.includes("catalyst") || nameLower.includes("nexus") || nameLower.includes("cat");
 
     let monitoringSectionHtml = "";
     if (isCloud) {
@@ -743,7 +743,7 @@ function getDeviceCliConfig(deviceName) {
     const nameLower = (deviceName || "").toLowerCase();
     
     // Cisco Switches & Routers
-    if (nameLower.includes("cisco") || nameLower.includes("switch") || nameLower.includes("router")) {
+    if (nameLower.includes("cisco") || nameLower.includes("switch") || nameLower.includes("router") || nameLower.includes("catalyst") || nameLower.includes("nexus") || nameLower.includes("cat")) {
         return {
             cliType: "cisco",
             prompt: `${deviceName}#`,

@@ -105,7 +105,7 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
     cmd_lower = cmd_str.lower()
 
     # --- Cisco CLI Command Handling ---
-    if "cisco" in device_lower or "switch" in device_lower or "router" in device_lower:
+    if "cisco" in device_lower or "switch" in device_lower or "router" in device_lower or "catalyst" in device_lower or "nexus" in device_lower or "cat" in device_lower:
         if "show ip int" in cmd_lower or "show ip interface" in cmd_lower:
             cisco_out = (
                 f"Interface                  IP-Address      OK? Method Status                Protocol\n"
