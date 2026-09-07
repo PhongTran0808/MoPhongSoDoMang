@@ -364,8 +364,8 @@
       "os": "Windows 11 Enterprise (23H2)",
       "criticality": 4,
       "syslog_format": "auto",
-      "x": -456.0,
-      "y": 625.0,
+      "x": -506.0,
+      "y": 645.0,
       "verified": true,
       "open_ports": [
         135,
@@ -383,8 +383,8 @@
       "os": "Windows 11 Enterprise (23H2)",
       "criticality": 4,
       "syslog_format": "auto",
-      "x": -152.0,
-      "y": 598.0,
+      "x": -224.0,
+      "y": 629.0,
       "verified": true,
       "open_ports": [
         135,

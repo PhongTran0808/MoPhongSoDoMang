@@ -340,8 +340,8 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
         ]
         subprocess.run(sed_addr_cmd, capture_output=True, text=True, check=False)
 
-        # Thực thi Đăng ký (Enrollment) qua agent-auth với cờ -I target_ip để Wazuh Manager nhận đúng IP sơ đồ mạng (không lấy IP 172.17.0.x của Docker bridge)
-        auth_cmd = ["docker", "exec", container_name, "/var/ossec/bin/agent-auth", "-m", wazuh_ip, "-A", device_name, "-I", target_ip]
+        # Thực thi Đăng ký (Enrollment) qua agent-auth với cờ -i để Wazuh Manager cho phép kết nối tức thì (chuyển trạng thái Active 🟢 trong 5s)
+        auth_cmd = ["docker", "exec", container_name, "/var/ossec/bin/agent-auth", "-m", wazuh_ip, "-A", device_name, "-i"]
         if enroll_pass and enroll_pass.strip():
             auth_cmd.extend(["-P", enroll_pass.strip()])
 
