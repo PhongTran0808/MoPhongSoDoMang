@@ -226,8 +226,11 @@ async function renderDevicePropertyPanel(dev) {
                     <input type="text" id="prop-container-wazuh-pass" value="${globalWazuhPass}" class="form-control" style="font-size:0.8rem; padding:0.3rem 0.5rem;" placeholder="Mã xác thực từ Wazuh UI">
                 </div>
 
-                <button class="btn-action" id="btn-deploy-agent" onclick="actionDeployAgent('${dev.name}', '${dev.ip}')" style="width:100%; font-size:0.82rem; padding:0.45rem; background:#16a34a; border-color:#15803d; color:#fff; font-weight:600;">
+                <button class="btn-action" id="btn-deploy-agent" onclick="actionDeployAgent('${dev.name}', '${dev.ip}')" style="width:100%; font-size:0.82rem; padding:0.45rem; background:#16a34a; border-color:#15803d; color:#fff; font-weight:600; margin-bottom:0.4rem;">
                     <i class="fa-solid fa-rocket"></i> 🚀 Deploy Agent Vào Wazuh Server
+                </button>
+                <button class="btn-action" id="btn-simulate-checkhash" onclick="actionSimulateCheckHash('${dev.name}')" style="width:100%; font-size:0.8rem; padding:0.4rem; background:#854d0e; border-color:#a16207; color:#fff;">
+                    <i class="fa-solid fa-flask"></i> 🧪 Giả Lập Mã Độc &amp; CheckHash SHA-256
                 </button>
             </div>
         </div>
@@ -430,6 +433,16 @@ async function exportToAgentWazuhAction() {
 }
 
 function openConnectModal() {
+    // Enable Vis.js interactive Drag-and-Drop wiring mode on canvas
+    if (typeof network !== "undefined" && network && typeof network.addEdgeMode === "function") {
+        network.addEdgeMode();
+        const statusBox = document.getElementById("scenario-status-log");
+        if (statusBox) {
+            statusBox.style.color = "#38bdf8";
+            statusBox.innerHTML = "🔗 <strong>CHẾ ĐỘ NỐI DÂY KÉO THẢ:</strong> Hãy nhấp vào <strong>Thiết Bị Nguồn</strong> trên sơ đồ và <strong>KÉO THẢ</strong> tới <strong>Thiết Bị Đích</strong> để nối dây lập tức!";
+        }
+    }
+
     const modal = document.getElementById("connect-modal");
     const fromSel = document.getElementById("modal-conn-from");
     const toSel = document.getElementById("modal-conn-to");
@@ -601,3 +614,164 @@ async function confirmBatchDeploy() {
         confirmBtn.innerHTML = `⚡ CẤU HÌNH &amp; DEPLOY TẤT CẢ NGAY`;
     }
 }
+
+async function actionSimulateCheckHash(deviceName) {
+    try {
+        const res = await API.simulateMalwareCheckHash(deviceName, "reverse_shell_script");
+        alert(`💥 ${res.message}\n\nSHA-256: ${res.sha256_hash}\nChi tiết output: ${res.check_hash_output}`);
+    } catch (e) {
+        alert(`❌ Lỗi giả lập CheckHash: ${e.message || e}`);
+    }
+}
+
+async function createQuickMicroLinuxTarget() {
+    const targetName = "Micro-Linux-64MB-Target";
+    const targetIp = "10.0.10.64";
+    
+    // Add to currentTopology if not exists
+    if (typeof currentTopology !== "undefined" && currentTopology.devices) {
+        let dev = currentTopology.devices.find(d => d.name === targetName || d.id === targetName);
+        if (!dev) {
+            dev = {
+                id: targetName,
+                name: targetName,
+                ip: targetIp,
+                type: "server",
+                os: "Alpine Linux 3.19 (RAM 64MB)",
+                criticality: 8,
+                status: "active"
+            };
+            currentTopology.devices.push(dev);
+            await API.saveTopology(currentTopology);
+            if (typeof initCanvas === "function") await initCanvas();
+        }
+    }
+
+    try {
+        const res = await API.createMicroLinuxContainer(targetName, targetIp);
+        alert(`🐧 ${res.message}\n\nĐã tạo máy ảo Target Linux 64MB thành công!`);
+    } catch (e) {
+        alert(`❌ Lỗi tạo Micro Linux Target: ${e.message || e}`);
+    }
+}
+
+async function openAgentAIFlowModal() {
+    const modal = document.getElementById("agent-ai-flow-modal");
+    const stepsBox = document.getElementById("agent-ai-flow-steps");
+    if (!modal || !stepsBox) return;
+
+    stepsBox.innerHTML = `<div style="color:#38bdf8;"><i class="fa-solid fa-spinner fa-spin"></i> Đang tải dữ liệu luồng giao tiếp AgentAI...</div>`;
+    modal.style.display = "flex";
+
+    try {
+        const data = await API.getAgentAIFlowSummary();
+        if (data && data.architecture_flow) {
+            stepsBox.innerHTML = "";
+            data.architecture_flow.forEach(st => {
+                const stepEl = document.createElement("div");
+                stepEl.style.cssText = "margin-bottom:0.8rem; padding:0.6rem; background:#0f172a; border-left:3px solid #38bdf8; border-radius:4px;";
+                stepEl.innerHTML = `
+                    <div style="font-weight:700; color:#38bdf8; font-size:0.88rem;">${st.title}</div>
+                    <div style="font-size:0.8rem; color:#cbd5e1; margin-top:0.3rem;">${st.description}</div>
+                `;
+                stepsBox.appendChild(stepEl);
+            });
+        }
+    } catch (e) {
+        stepsBox.innerHTML = `<div style="color:#ef4444;">Lỗi tải dữ liệu: ${e.message || e}</div>`;
+    }
+}
+
+function closeAgentAIFlowModal() {
+    const modal = document.getElementById("agent-ai-flow-modal");
+    if (modal) modal.style.display = "none";
+}
+
+async function triggerMicroLinuxCheckHashDemo() {
+    closeAgentAIFlowModal();
+    await createQuickMicroLinuxTarget();
+    await actionSimulateCheckHash("Micro-Linux-64MB-Target");
+}
+
+let activeTerminalDevice = "";
+
+async function openPuttyTerminalModal(deviceName) {
+    activeTerminalDevice = deviceName || "Micro-Linux-64MB-Target";
+    const modal = document.getElementById("putty-terminal-modal");
+    const titleEl = document.getElementById("putty-title");
+    const promptEl = document.getElementById("putty-prompt-label");
+    const consoleBox = document.getElementById("putty-console-output");
+    
+    if (!modal || !consoleBox) return;
+    
+    if (titleEl) titleEl.innerText = `PuTTY SSH / Docker Shell — root@${activeTerminalDevice}:~#`;
+    if (promptEl) promptEl.innerText = `root@${activeTerminalDevice}:~#`;
+    
+    consoleBox.innerHTML = `=== PuTTY SSH / Docker Container TTY ===\n[Connected to ${activeTerminalDevice}]\nType commands below or use Quick Cmds...\n\nroot@${activeTerminalDevice}:~# `;
+    modal.style.display = "flex";
+    
+    // Auto execute initial diagnostic
+    sendPuttyQuickCmd("uptime && uname -a");
+}
+
+function closePuttyTerminalModal() {
+    const modal = document.getElementById("putty-terminal-modal");
+    if (modal) modal.style.display = "none";
+}
+
+async function sendPuttyQuickCmd(cmdStr) {
+    const input = document.getElementById("putty-cmd-input");
+    if (input) input.value = cmdStr;
+    await submitPuttyCommand();
+}
+
+function handlePuttyInputKey(evt) {
+    if (evt.key === "Enter") {
+        submitPuttyCommand();
+    }
+}
+
+async function submitPuttyCommand() {
+    const input = document.getElementById("putty-cmd-input");
+    const consoleBox = document.getElementById("putty-console-output");
+    if (!input || !consoleBox) return;
+    
+    const cmd = input.value.trim();
+    if (!cmd) return;
+    
+    input.value = "";
+    consoleBox.innerHTML += `${cmd}\n`;
+    consoleBox.scrollTop = consoleBox.scrollHeight;
+    
+    try {
+        const res = await API.execTerminalCommand(activeTerminalDevice, cmd);
+        if (res.status === "success") {
+            consoleBox.innerHTML += `${res.output}\n\nroot@${activeTerminalDevice}:~# `;
+        } else {
+            consoleBox.innerHTML += `🔴 ${res.message || 'Lỗi thực thi'}\n\nroot@${activeTerminalDevice}:~# `;
+        }
+    } catch (e) {
+        consoleBox.innerHTML += `🔴 Lỗi AJAX: ${e.message || e}\n\nroot@${activeTerminalDevice}:~# `;
+    }
+    consoleBox.scrollTop = consoleBox.scrollHeight;
+}
+
+function syncGlobalWazuhIp(ipVal) {
+    const val = ipVal ? ipVal.trim() : "";
+    if (val) {
+        localStorage.setItem("sodomang_wazuh_ip", val);
+    }
+    ["input-wazuh-ip", "batch-wazuh-ip", "prop-container-wazuh-ip"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && val) el.value = val;
+    });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    const savedIp = localStorage.getItem("sodomang_wazuh_ip") || "192.168.1.208";
+    const globalInput = document.getElementById("global-wazuh-ip");
+    if (globalInput) {
+        globalInput.value = savedIp;
+    }
+    syncGlobalWazuhIp(savedIp);
+});

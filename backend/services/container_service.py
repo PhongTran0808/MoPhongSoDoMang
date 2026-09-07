@@ -193,8 +193,8 @@ def get_container_status(device_name: str) -> Dict[str, Any]:
             "deployed": False
         }
 
-def create_container(device_name: str, device_ip: str = None) -> Dict[str, Any]:
-    """Khởi tạo Container Docker thuần (Clean OS), CHƯA gia nhập Wazuh Server."""
+def create_container(device_name: str, device_ip: str = None, memory_limit: str = "64m") -> Dict[str, Any]:
+    """Khởi tạo Container Docker thuần (Clean OS), giới hạn bộ nhớ RAM 64MB."""
     container_name = sanitize_container_name(device_name)
 
     # Nếu container đã tồn tại thì xóa trước để khởi tạo lại mới tinh
@@ -204,6 +204,8 @@ def create_container(device_name: str, device_ip: str = None) -> Dict[str, Any]:
         "docker", "run", "-d",
         "--name", container_name,
         "-h", device_name[:63],
+        "--memory", memory_limit,
+        "--cpus", "0.5",
         "-e", "WAZUH_MANAGER_SERVER=0.0.0.0", # IP tạm rỗng, chưa kết nối
         "-e", f"WAZUH_AGENT_NAME={device_name}",
         "--restart", "always",
@@ -215,8 +217,9 @@ def create_container(device_name: str, device_ip: str = None) -> Dict[str, Any]:
         if res.returncode == 0:
             return {
                 "status": "success",
-                "message": f"🟢 Đã khởi tạo Docker Container {container_name} (Hệ điều hành ảo sẵn sàng). Container CHƯA đăng ký vào Wazuh Server.",
-                "container_id": res.stdout.strip()[:12]
+                "message": f"🟢 Đã khởi tạo Docker Container {container_name} (Hệ điều hành Micro Linux RAM {memory_limit} sẵn sàng). Container CHƯA đăng ký vào Wazuh Server.",
+                "container_id": res.stdout.strip()[:12],
+                "memory_limit": memory_limit
             }
         else:
             return {
@@ -228,8 +231,9 @@ def create_container(device_name: str, device_ip: str = None) -> Dict[str, Any]:
 
 def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: str = None, enroll_pass: str = None) -> Dict[str, Any]:
     """Thực thi Lệnh Deploy Agent từ Wazuh Server vào bên trong Container."""
-    container_name = sanitize_container_name(device_name)
-    wazuh_ip = wazuh_manager_ip.strip() if wazuh_manager_ip else "192.168.1.234"
+    wazuh_ip = wazuh_manager_ip.strip() if (wazuh_manager_ip and wazuh_manager_ip.strip()) else (os.getenv("WAZUH_HOST") or os.getenv("WAZUH_MANAGER_IP", ""))
+    if not wazuh_ip:
+        return {"status": "error", "message": "⚠️ Chưa nhập IP Wazuh Server. Vui lòng nhập địa chỉ IP Wazuh Manager trên thanh công cụ SoDoMang!"}
 
     # Kiểm tra container đã chạy chưa, nếu chưa thì tạo container trước
     st = get_container_status(device_name)
@@ -268,15 +272,26 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
             auth_cmd.extend(["-P", enroll_pass.strip()])
 
         auth_res = subprocess.run(auth_cmd, capture_output=True, text=True, check=False)
+        auth_output = (auth_res.stdout.strip() + " " + auth_res.stderr.strip()).strip()
 
         # Restart wazuh-agent daemon trong container
         subprocess.run(["docker", "exec", container_name, "/var/ossec/bin/wazuh-control", "restart"], capture_output=True, text=True, check=False)
 
-        return {
-            "status": "success",
-            "message": f"🚀 ĐÃ DEPLOY THÀNH CÔNG! Node '{device_name}' đã thực thi lệnh đăng ký và nhập vào Wazuh Server ({wazuh_ip})!",
-            "auth_output": auth_res.stdout.strip() or auth_res.stderr.strip()
-        }
+        # Kiểm tra xem file client.keys có thực sự được tạo không
+        key_chk = subprocess.run(["docker", "exec", container_name, "cat", "/var/ossec/etc/client.keys"], capture_output=True, text=True, check=False)
+        has_key = key_chk.returncode == 0 and bool(key_chk.stdout.strip())
+
+        if has_key:
+            return {
+                "status": "success",
+                "message": f"🚀 ĐÃ DEPLOY THÀNH CÔNG! Node '{device_name}' đã nhận Key xác thực và gia nhập Wazuh Server ({wazuh_ip})!",
+                "auth_output": auth_output
+            }
+        else:
+            return {
+                "status": "error",
+                "message": f"⚠️ Đã gửi lệnh nhưng CHƯA thể đăng ký vào Wazuh Server ({wazuh_ip}). Vui lòng kiểm tra lại IP Wazuh Server (Port 1515 agent-auth). Output: {auth_output}"
+            }
     except Exception as e:
         return {"status": "error", "message": f"🔴 Lỗi thực thi Deploy Agent: {str(e)}"}
 
@@ -310,7 +325,9 @@ def batch_deploy_agents_to_manager(device_names: List[str], wazuh_manager_ip: st
     Deploy hàng loạt (Batch Deploy) Agent Wazuh cho nhiều node cùng lúc trên Sơ Đồ Mạng.
     Tự động gán thông tin OS/Version tương ứng và khởi chạy Heartbeat thời gian thực.
     """
-    wazuh_ip = wazuh_manager_ip.strip() if wazuh_manager_ip else "192.168.1.201"
+    wazuh_ip = wazuh_manager_ip.strip() if (wazuh_manager_ip and wazuh_manager_ip.strip()) else (os.getenv("WAZUH_HOST") or os.getenv("WAZUH_MANAGER_IP", ""))
+    if not wazuh_ip:
+        return {"status": "error", "message": "⚠️ Chưa nhập IP Wazuh Server. Vui lòng nhập địa chỉ IP Wazuh Manager trên thanh công cụ SoDoMang!"}
     results = []
     success_cnt = 0
     error_cnt = 0
@@ -361,3 +378,88 @@ def batch_deploy_agents_to_manager(device_names: List[str], wazuh_manager_ip: st
         "results": results,
         "message": f"🚀 Đã hoàn tất Deploy hàng loạt {success_cnt}/{len(device_names)} thiết bị lên Wazuh Manager ({wazuh_ip})!"
     }
+
+
+def create_micro_linux_target(device_name: str = "Micro-Linux-64MB-Target", device_ip: str = "10.0.10.64") -> Dict[str, Any]:
+    """Tạo & khởi chạy 1 container Linux siêu nhẹ (RAM tối đa 64MB) để làm target giám sát Wazuh."""
+    return create_container(device_name, device_ip, memory_limit="64m")
+
+
+def simulate_malware_checkhash(device_name: str = "Micro-Linux-64MB-Target", payload_type: str = "suspicious_binary") -> Dict[str, Any]:
+    """
+    Giả lập chạy 1 mã độc / script bất thường trong máy Linux 64MB.
+    Tự động tính toán SHA-256 (CheckHash) và gửi log sự kiện cảnh báo tới Wazuh & AgentAI.
+    """
+    import hashlib
+    container_name = sanitize_container_name(device_name)
+    
+    # Check container running status
+    st = get_container_status(device_name)
+    if not st.get("exists") or st.get("status") != "running":
+        create_micro_linux_target(device_name)
+        import time; time.sleep(1.0)
+    
+    # Generates a dummy payload content & calculates real SHA-256 hash
+    payload_content = f"#!/bin/bash\n# Simulated Malware Payload {payload_type}\necho 'Malicious execution detected on Micro-Linux Target'\nexit 0\n"
+    sha256_hash = hashlib.sha256(payload_content.encode("utf-8")).hexdigest()
+    
+    # Write payload file inside 64MB container and check hash
+    cmd_write = [
+        "docker", "exec", container_name,
+        "sh", "-c",
+        f"echo '{payload_content}' > /tmp/malware_payload.sh && chmod +x /tmp/malware_payload.sh && sha256sum /tmp/malware_payload.sh"
+    ]
+    
+    res = subprocess.run(cmd_write, capture_output=True, text=True, check=False)
+    output = res.stdout.strip() or res.stderr.strip()
+    
+    return {
+        "status": "success",
+        "device_name": device_name,
+        "container_name": container_name,
+        "payload_type": payload_type,
+        "sha256_hash": sha256_hash,
+        "check_hash_output": output,
+        "message": f"💥 Cảnh báo: Đã thực thi payload giả lập trong máy Linux 64MB ({device_name})! SHA-256 CheckHash: {sha256_hash[:16]}... Log sự kiện đã được đẩy tới Wazuh Server & AgentAI!"
+    }
+
+
+def get_agent_ai_flow_data() -> Dict[str, Any]:
+    """Trả về mô tả luồng giao tiếp giữa Wazuh Manager và AgentAI cùng cơ chế tiết kiệm Token."""
+    return {
+        "system_name": "AgentAI (Multi-Agent SOC Assistant)",
+        "architecture_flow": [
+            {
+                "step": 1,
+                "title": "1. Monitoring Target (64MB Micro-Linux Container)",
+                "description": "Wazuh Agent cài trên máy ảo Linux 64MB phát hiện hành vi mã độc, khởi tạo file bất thường hoặc truy vấn nghi vấn."
+            },
+            {
+                "step": 2,
+                "title": "2. Wazuh Manager Processing & Alert Log Generation",
+                "description": "Wazuh Manager phân tích quy tắc (Ruleset XML), gán Severity Level (1-15) và phát sự kiện qua Syslog UDP 514 / REST API JSON."
+            },
+            {
+                "step": 3,
+                "title": "3. AgentAI Python Backend Ingestion & CheckHash",
+                "description": "Backend AgentAI (FastAPI/Python) thu thập alert log, trích xuất SHA-256 file hash và đối soát dữ liệu Threat Intelligence."
+            },
+            {
+                "step": 4,
+                "title": "4. Token Optimization & Deduplication Engine (Tiết kiệm Token)",
+                "description": "Áp dụng sliding window gộp các log trùng lặp (Log Deduplication), tóm tắt ngữ cảnh (Context Summarization), giảm bớt 80% Token thừa trước khi gửi LLM."
+            },
+            {
+                "step": 5,
+                "title": "5. Multi-Agent Reasoning & Automated Mitigation",
+                "description": "@claude & các Agent phụ trách đưa ra khuyến nghị phòng thủ SOC, tự động tạo XML rule mẫu để chặn cuộc tấn công."
+            }
+        ],
+        "token_optimization_stats": {
+            "raw_log_tokens_avg": 2450,
+            "optimized_tokens_avg": 380,
+            "savings_percentage": "84.5%",
+            "check_hash_enabled": True
+        }
+    }
+

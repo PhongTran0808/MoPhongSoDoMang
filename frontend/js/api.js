@@ -96,5 +96,33 @@ const API = {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ device_name: deviceName, action: action })
         });
+    },
+
+    async createMicroLinuxContainer(deviceName, deviceIp) {
+        return await this._fetch("/api/container/micro-linux/create", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ device_name: deviceName, device_ip: deviceIp })
+        });
+    },
+
+    async simulateMalwareCheckHash(deviceName, payloadType) {
+        return await this._fetch("/api/container/micro-linux/simulate-attack", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ device_name: deviceName, payload_type: payloadType })
+        });
+    },
+
+    async getAgentAIFlowSummary() {
+        return await this._fetch("/api/container/micro-linux/flow-summary");
+    },
+
+    async execTerminalCommand(deviceName, command) {
+        return await this._fetch("/api/container/terminal/exec", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ device_name: deviceName, command: command })
+        });
     }
 };

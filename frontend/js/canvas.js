@@ -155,6 +155,17 @@ function renderNetwork(container, topo) {
     container.innerHTML = "";
     network = new vis.Network(container, { nodes: nodesDataSet, edges: edgesDataSet }, options);
 
+    // Double Click handler -> Open PuTTY Web TTY Terminal
+    network.on("doubleClick", params => {
+        if (params.nodes.length > 0) {
+            const devId = params.nodes[0];
+            const dev = currentTopology.devices.find(d => d.id === devId);
+            if (dev && typeof openPuttyTerminalModal === "function") {
+                openPuttyTerminalModal(dev.name || dev.id);
+            }
+        }
+    });
+
     // Click handler -> open property panel for node or edge
     network.on("click", params => {
         if (params.nodes.length > 0) {

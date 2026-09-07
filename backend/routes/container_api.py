@@ -6,7 +6,10 @@ from backend.services.container_service import (
     create_container,
     deploy_agent_to_manager,
     batch_deploy_agents_to_manager,
-    toggle_container
+    toggle_container,
+    create_micro_linux_target,
+    simulate_malware_checkhash,
+    get_agent_ai_flow_data
 )
 
 router = APIRouter(prefix="/api/container", tags=["Container Manager"])
@@ -28,6 +31,10 @@ class BatchDeployRequest(BaseModel):
 class ContainerToggleRequest(BaseModel):
     device_name: str
     action: str  # "start", "stop", "remove"
+
+class MicroLinuxSimulateRequest(BaseModel):
+    device_name: Optional[str] = "Micro-Linux-64MB-Target"
+    payload_type: Optional[str] = "suspicious_binary"
 
 @router.get("/status/{device_name:path}")
 def check_status(device_name: str):
@@ -65,3 +72,51 @@ def toggle_node_container(req: ContainerToggleRequest):
     if res.get("status") == "error":
         raise HTTPException(status_code=500, detail=res.get("message"))
     return res
+
+@router.post("/micro-linux/create")
+def create_micro_linux_endpoint(req: ContainerCreateRequest):
+    """Khởi chạy 1 container Linux 64MB siêu nhẹ."""
+    res = create_micro_linux_target(req.device_name, req.device_ip or "10.0.10.64")
+    if res.get("status") == "error":
+        raise HTTPException(status_code=500, detail=res.get("message"))
+    return res
+
+@router.post("/micro-linux/simulate-attack")
+def simulate_attack_endpoint(req: MicroLinuxSimulateRequest):
+    """Giả lập thực thi mã độc & tính toán CheckHash SHA-256 trên máy ảo Linux 64MB."""
+    res = simulate_malware_checkhash(req.device_name or "Micro-Linux-64MB-Target", req.payload_type or "suspicious_binary")
+    return res
+
+class TerminalExecRequest(BaseModel):
+    device_name: str
+    command: Optional[str] = "ls -la"
+
+@router.post("/terminal/exec")
+def execute_terminal_endpoint(req: TerminalExecRequest):
+    """Thực thi lệnh shell tương tác bên trong container (PuTTY Web TTY Terminal)."""
+    import subprocess
+    container_name = re.sub(r'[^a-zA-Z0-9_-]', '_', req.device_name)
+    if not container_name.startswith("wazuh-agent-"):
+        container_name = f"wazuh-agent-{container_name}"
+    
+    cmd_str = req.command.strip() if req.command else "uptime"
+    exec_cmd = ["docker", "exec", container_name, "sh", "-c", cmd_str]
+    try:
+        res = subprocess.run(exec_cmd, capture_output=True, text=True, timeout=10, check=False)
+        output = (res.stdout.strip() + "\n" + res.stderr.strip()).strip()
+        return {
+            "status": "success",
+            "device_name": req.device_name,
+            "container_name": container_name,
+            "command": cmd_str,
+            "returncode": res.returncode,
+            "output": output or "[Command executed with exit code 0]"
+        }
+    except Exception as e:
+        return {"status": "error", "message": f"🔴 Lỗi thực thi Terminal: {str(e)}"}
+
+@router.get("/micro-linux/flow-summary")
+def get_flow_summary_endpoint():
+    """Lấy thông tin luồng giao tiếp Wazuh -> AgentAI và thống kê tiết kiệm Token."""
+    return get_agent_ai_flow_data()
+
