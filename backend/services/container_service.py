@@ -276,17 +276,27 @@ def purge_stale_agent_from_manager(device_name: str, wazuh_manager_ip: str):
 
 def generate_agent_telemetry_events(container_name: str, device_name: str, target_ip: str, wazuh_ip: str):
     """
-    Sinh các log an ninh thực tế (Authentication logs, FIM integrity scans, System Audit)
-    và gửi trực tiếp qua wazuh-agent daemon sang Wazuh Manager.
+    Sinh các log an ninh thực tế (Authentication logs, Brute-force, Privilege Escalation, FIM integrity scans)
+    và đẩy trực tiếp qua wazuh-logcollector sang Wazuh Manager để hiển thị biểu đồ MITRE ATT&CK & Security Events.
     """
     import time
     try:
+        # 1. Đảm bảo ossec.conf trong container đã có cấu hình <localfile> đọc /var/log/syslog & /var/log/auth.log
+        check_lf = subprocess.run(["docker", "exec", container_name, "grep", "-q", "/var/log/syslog", "/var/ossec/etc/ossec.conf"], capture_output=True, text=True, check=False)
+        if check_lf.returncode != 0:
+            lf_script = """sed -i '/<\\/ossec_config>/i\\  <localfile>\\n    <log_format>syslog</log_format>\\n    <location>/var/log/syslog</location>\\n  </localfile>\\n  <localfile>\\n    <log_format>syslog</log_format>\\n    <location>/var/log/auth.log</location>\\n  </localfile>' /var/ossec/etc/ossec.conf"""
+            subprocess.run(["docker", "exec", container_name, "sh", "-c", lf_script], capture_output=True, text=True, check=False)
+
+        now_str = time.strftime("%b %d %H:%M:%S")
         events = [
-            f"Sep 07 13:15:00 {device_name} sshd[1042]: Accepted password for Administrator from {target_ip} port 54321 ssh2",
-            f"Sep 07 13:15:05 {device_name} sudo: pam_unix(sudo:session): session opened for user root by admin(uid=0)",
-            f"Sep 07 13:15:10 {device_name} wazuh-agent: INFO: Connected to server {wazuh_ip}:1514",
-            f"Sep 07 13:15:15 {device_name} kernel: Firewall: Rule #12 Allow-LAN-to-WAN src={target_ip} dst=8.8.8.8 PROTO=TCP SPT=51200 DPT=443",
-            f"Sep 07 13:15:20 {device_name} systemd[1]: Security Configuration Assessment scan completed for {device_name}."
+            f"{now_str} {device_name} sshd[1042]: Failed password for invalid user admin from {target_ip} port 51234 ssh2",
+            f"{now_str} {device_name} sshd[1043]: Failed password for root from {target_ip} port 51235 ssh2",
+            f"{now_str} {device_name} sshd[1044]: Failed password for root from {target_ip} port 51236 ssh2",
+            f"{now_str} {device_name} sshd[1045]: Accepted password for Administrator from {target_ip} port 54321 ssh2",
+            f"{now_str} {device_name} sudo: pam_unix(sudo:session): session opened for user root by admin(uid=1000)",
+            f"{now_str} {device_name} useradd[29102]: new user: name=sec_admin, UID=0, GID=0, home=/root, shell=/bin/bash",
+            f"{now_str} {device_name} kernel: Firewall: Rule #12 Block-Malicious src=10.0.0.99 dst={target_ip} PROTO=TCP DPT=445",
+            f"{now_str} {device_name} wazuh-agent: INFO: Security Configuration Assessment scan completed for {device_name}."
         ]
         
         # Inject log vào /var/log/syslog & /var/log/auth.log bên trong container
@@ -295,7 +305,7 @@ def generate_agent_telemetry_events(container_name: str, device_name: str, targe
             log_cmds.append(f"echo '{ev}' >> /var/log/syslog")
             log_cmds.append(f"echo '{ev}' >> /var/log/auth.log")
 
-        log_inject_script = "mkdir -p /var/log && " + " && ".join(log_cmds)
+        log_inject_script = "mkdir -p /var/log && touch /var/log/syslog /var/log/auth.log && " + " && ".join(log_cmds)
         subprocess.run(["docker", "exec", container_name, "sh", "-c", log_inject_script], capture_output=True, text=True, check=False)
         
         # Tạo sự kiện FIM (File Integrity Monitoring)
@@ -381,8 +391,8 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
         ]
         subprocess.run(rm_addr_cmd, capture_output=True, text=True, check=False)
 
-        # Thực thi Đăng ký (Enrollment) qua agent-auth với cờ -i để Wazuh Manager cho phép kết nối tức thì (chuyển trạng thái Active 🟢 trong 5s)
-        auth_cmd = ["docker", "exec", container_name, "/var/ossec/bin/agent-auth", "-m", wazuh_ip, "-A", device_name, "-i"]
+        # Thực thi Đăng ký (Enrollment) qua agent-auth với cờ -I any để Wazuh Manager cho phép kết nối tức thì (chuyển trạng thái Active 🟢 trong 5s)
+        auth_cmd = ["docker", "exec", container_name, "/var/ossec/bin/agent-auth", "-m", wazuh_ip, "-A", device_name, "-I", "any"]
         if enroll_pass and enroll_pass.strip():
             auth_cmd.extend(["-P", enroll_pass.strip()])
 
