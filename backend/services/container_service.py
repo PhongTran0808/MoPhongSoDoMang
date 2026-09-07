@@ -231,6 +231,7 @@ def create_container(device_name: str, device_ip: str = None, memory_limit: str 
 
 def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: str = None, enroll_pass: str = None) -> Dict[str, Any]:
     """Thực thi Lệnh Deploy Agent từ Wazuh Server vào bên trong Container."""
+    container_name = sanitize_container_name(device_name)
     wazuh_ip = wazuh_manager_ip.strip() if (wazuh_manager_ip and wazuh_manager_ip.strip()) else (os.getenv("WAZUH_HOST") or os.getenv("WAZUH_MANAGER_IP", ""))
     if not wazuh_ip:
         return {"status": "error", "message": "⚠️ Chưa nhập IP Wazuh Server. Vui lòng nhập địa chỉ IP Wazuh Manager trên thanh công cụ SoDoMang!"}
