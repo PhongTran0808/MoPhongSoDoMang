@@ -88,6 +88,26 @@ def simulate_attack_endpoint(req: MicroLinuxSimulateRequest):
     res = simulate_malware_checkhash(req.device_name or "Micro-Linux-64MB-Target", req.payload_type or "suspicious_binary")
     return res
 
+import json
+from pathlib import Path
+
+TOPOLOGY_JSON_PATH = Path(__file__).resolve().parent.parent.parent / "config" / "topology.json"
+
+def get_device_ip_from_topology(device_name: str) -> str:
+    try:
+        if TOPOLOGY_JSON_PATH.exists():
+            with open(TOPOLOGY_JSON_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for dev in data.get("devices", []):
+                d_name = dev.get("name", "")
+                d_id = dev.get("id", "")
+                if d_name.lower() == device_name.lower() or d_id.lower() == device_name.lower():
+                    if dev.get("ip"):
+                        return dev["ip"]
+    except Exception:
+        pass
+    return "172.16.175.241"
+
 class TerminalExecRequest(BaseModel):
     device_name: str
     command: Optional[str] = "ls -la"
@@ -104,12 +124,22 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
     device_lower = req.device_name.lower()
     cmd_lower = cmd_str.lower()
 
+    # Tra cứu IP động tương ứng với thiết bị từ sơ đồ mạng
+    target_ip = get_device_ip_from_topology(req.device_name)
+    ip_parts = target_ip.split(".")
+    if len(ip_parts) == 4:
+        gateway_ip = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.254"
+        dhcp_ip = f"{ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.200"
+    else:
+        gateway_ip = "172.16.175.254"
+        dhcp_ip = "172.16.175.200"
+
     # --- Cisco CLI Command Handling ---
     if "cisco" in device_lower or "switch" in device_lower or "router" in device_lower or "catalyst" in device_lower or "nexus" in device_lower or "cat" in device_lower:
         if "show ip int" in cmd_lower or "show ip interface" in cmd_lower:
             cisco_out = (
                 f"Interface                  IP-Address      OK? Method Status                Protocol\n"
-                f"GigabitEthernet1/0/1       172.16.175.1    YES NVRAM  up                    up      \n"
+                f"GigabitEthernet1/0/1       {target_ip}   YES NVRAM  up                    up      \n"
                 f"GigabitEthernet1/0/2       172.16.175.2    YES NVRAM  up                    up      \n"
                 f"GigabitEthernet1/0/3       10.0.10.1       YES NVRAM  up                    up      \n"
                 f"Vlan10                     10.0.10.254     YES NVRAM  up                    up      \n"
@@ -132,9 +162,10 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
                 f"!\n"
                 f"interface GigabitEthernet1/0/1\n"
                 f" description Trunk-Link-Core\n"
+                f" ip address {target_ip} 255.255.255.0\n"
                 f" switchport mode trunk\n"
                 f"!\n"
-                f"ip default-gateway 172.16.175.254\n"
+                f"ip default-gateway {gateway_ip}\n"
                 f"end"
             )
             return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": cisco_out}
@@ -164,9 +195,9 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
         elif "show ip route" in cmd_lower:
             cisco_out = (
                 f"Codes: C - connected, S - static, R - RIP, M - mobile, B - BGP\n\n"
-                f"Gateway of last resort is 172.16.175.254 to network 0.0.0.0\n\n"
-                f"S*    0.0.0.0/0 [1/0] via 172.16.175.254\n"
-                f"C     172.16.175.0/24 is directly connected, GigabitEthernet1/0/1\n"
+                f"Gateway of last resort is {gateway_ip} to network 0.0.0.0\n\n"
+                f"S*    0.0.0.0/0 [1/0] via {gateway_ip}\n"
+                f"C     {ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.0/24 is directly connected, GigabitEthernet1/0/1\n"
                 f"C     10.0.10.0/24 is directly connected, Vlan10\n"
                 f"C     10.0.20.0/24 is directly connected, Vlan20"
             )
@@ -177,13 +208,14 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
         if "get system status" in cmd_lower:
             forti_out = (
                 f"Version: FortiGate-600F v7.2.5,build1523,230510 (GA.M)\n"
+                f"Primary Interface IP: {target_ip}\n"
                 f"Virus-DB: 91.00234(2026-09-07 08:00)\n"
                 f"Extended DB: 91.00234(2026-09-07 08:00)\n"
                 f"IPS-DB: 6.00741(2026-09-07 00:00)\n"
                 f"Serial-Number: FG600F-TK23091045\n"
                 f"HA mode: a-p, cluster index: 0\n"
                 f"Operation Mode: NAT\n"
-                f"System time: Mon Sep  7 12:00:00 2026"
+                f"System time: Mon Sep  7 13:00:00 2026"
             )
             return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": forti_out}
         elif "show firewall policy" in cmd_lower:
@@ -191,7 +223,7 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
                 f"config firewall policy\n"
                 f"    edit 1\n"
                 f"        set name \"Allow-LAN-to-WAN\"\n"
-                f"        set srcintf \"port2-LAN\"\n"
+                f"        set srcintf \"port2-LAN\" ({target_ip})\n"
                 f"        set dstintf \"port1-WAN\"\n"
                 f"        set action accept\n"
                 f"        set schedule \"always\"\n"
@@ -209,10 +241,10 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
                 f"Windows IP Configuration\n\n"
                 f"Ethernet adapter Ethernet 1:\n\n"
                 f"   Connection-specific DNS Suffix  . : localdomain\n"
-                f"   IPv4 Address. . . . . . . . . . . : 172.16.175.245\n"
+                f"   IPv4 Address. . . . . . . . . . . : {target_ip}\n"
                 f"   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n"
-                f"   Default Gateway . . . . . . . . . : 172.16.175.254\n"
-                f"   DHCP Server . . . . . . . . . . . : 172.16.175.200"
+                f"   Default Gateway . . . . . . . . . : {gateway_ip}\n"
+                f"   DHCP Server . . . . . . . . . . . : {dhcp_ip}"
             )
             return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": win_out}
         elif "get-process" in cmd_lower:
@@ -234,7 +266,7 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
             "if ! command -v ip >/dev/null 2>&1; then "
             "mkdir -p /usr/bin 2>/dev/null; "
             "echo '#!/bin/sh' > /usr/bin/ip; "
-            "echo 'if [ -f /sbin/ip ]; then /sbin/ip \"$@\"; elif [ -f /usr/sbin/ip ]; then /usr/sbin/ip \"$@\"; else echo \"10.0.0.1/24 (eth0 inet) | Gateway: 10.0.0.254\"; hostname -I 2>/dev/null || ifconfig 2>/dev/null || cat /etc/hosts; fi' >> /usr/bin/ip; "
+            f"echo 'if [ -f /sbin/ip ]; then /sbin/ip \"$@\"; elif [ -f /usr/sbin/ip ]; then /usr/sbin/ip \"$@\"; else echo \"{target_ip}/24 (eth0 inet) | Gateway: {gateway_ip}\"; hostname -I 2>/dev/null || ifconfig 2>/dev/null || cat /etc/hosts; fi' >> /usr/bin/ip; "
             "chmod +x /usr/bin/ip 2>/dev/null; "
             "fi"
         )
