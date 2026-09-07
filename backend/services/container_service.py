@@ -49,13 +49,13 @@ DEVICE_OS_PROFILES = {
         "arch": "x86_64"
     },
     "Manager-Admin-PC": {
-        "os_name": "Windows OS",
+        "os_name": "Microsoft Windows",
         "os_version": "Windows 11 Enterprise (23H2)",
         "kernel": "NT 10.0.22631.3007",
         "arch": "x86_64"
     },
     "PC-PB1-VLAN10": {
-        "os_name": "Windows OS",
+        "os_name": "Microsoft Windows",
         "os_version": "Windows 10 Pro (22H2)",
         "kernel": "NT 10.0.19045.3930",
         "arch": "x86_64"
@@ -229,6 +229,51 @@ def create_container(device_name: str, device_ip: str = None, memory_limit: str 
     except Exception as e:
         return {"status": "error", "message": f"🔴 Lỗi thực thi Docker: {str(e)}"}
 
+def get_device_ip_from_topology(device_name: str) -> str:
+    try:
+        if TOPOLOGY_JSON_PATH.exists():
+            with open(TOPOLOGY_JSON_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for dev in data.get("devices", []):
+                d_name = dev.get("name", "")
+                d_id = dev.get("id", "")
+                if d_name.lower() == device_name.lower() or d_id.lower() == device_name.lower():
+                    if dev.get("ip"):
+                        return dev["ip"]
+    except Exception:
+        pass
+    return "172.16.175.241"
+
+def generate_agent_telemetry_events(container_name: str, device_name: str, target_ip: str, wazuh_ip: str):
+    """
+    Sinh các log an ninh thực tế (Authentication logs, FIM integrity scans, System Audit)
+    và gửi trực tiếp qua wazuh-agent daemon sang Wazuh Manager.
+    """
+    import time
+    try:
+        events = [
+            f"Sep 07 13:15:00 {device_name} sshd[1042]: Accepted password for Administrator from {target_ip} port 54321 ssh2",
+            f"Sep 07 13:15:05 {device_name} sudo: pam_unix(sudo:session): session opened for user root by admin(uid=0)",
+            f"Sep 07 13:15:10 {device_name} wazuh-agent: INFO: Connected to server {wazuh_ip}:1514",
+            f"Sep 07 13:15:15 {device_name} kernel: Firewall: Rule #12 Allow-LAN-to-WAN src={target_ip} dst=8.8.8.8 PROTO=TCP SPT=51200 DPT=443",
+            f"Sep 07 13:15:20 {device_name} systemd[1]: Security Configuration Assessment scan completed for {device_name}."
+        ]
+        
+        # Inject log vào /var/log/syslog & /var/log/auth.log bên trong container
+        log_cmds = []
+        for ev in events:
+            log_cmds.append(f"echo '{ev}' >> /var/log/syslog")
+            log_cmds.append(f"echo '{ev}' >> /var/log/auth.log")
+
+        log_inject_script = "mkdir -p /var/log && " + " && ".join(log_cmds)
+        subprocess.run(["docker", "exec", container_name, "sh", "-c", log_inject_script], capture_output=True, text=True, check=False)
+        
+        # Tạo sự kiện FIM (File Integrity Monitoring)
+        fim_cmd = f"echo 'Config change timestamp={time.time()} by Administrator ({target_ip})' > /etc/wazuh_fim_scan.conf && touch /tmp/integrity_check.flag"
+        subprocess.run(["docker", "exec", container_name, "sh", "-c", fim_cmd], capture_output=True, text=True, check=False)
+    except Exception as e:
+        logger.warning(f"Lỗi sinh log telemetry: {e}")
+
 def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: str = None, enroll_pass: str = None) -> Dict[str, Any]:
     """Thực thi Lệnh Deploy Agent từ Wazuh Server vào bên trong Container."""
     container_name = sanitize_container_name(device_name)
@@ -251,10 +296,13 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
             "message": f"📡 Thiết bị '{device_name}' là Network Appliance (Firewall/Router/Switch). Thiết bị phần cứng này KHÔNG CÀI WAZUH AGENT LINUX. Wazuh giám sát thiết bị này qua Remote Syslog (Agentless - Port 514 UDP). Vui lòng sử dụng tính năng '⚡ Kích Hoạt Luồng Log Syslog (Port 514)'!"
         }
 
+    # Tra cứu IP chính xác của thiết bị từ Sơ Đồ Mạng
+    target_ip = device_ip.strip() if (device_ip and device_ip.strip()) else get_device_ip_from_topology(device_name)
+
     # Kiểm tra container đã chạy chưa, nếu chưa thì tạo container trước
     st = get_container_status(device_name)
     if not st.get("exists") or st.get("status") != "running":
-        create_res = create_container(device_name, device_ip)
+        create_res = create_container(device_name, target_ip)
         if create_res.get("status") == "error":
             return create_res
 
@@ -267,14 +315,14 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
         os_name = os_prof.get("os_name", "Linux")
         os_version = os_prof.get("os_version", "Ubuntu 22.04 LTS")
 
-        os_release_str = f'NAME="{os_name}"\nVERSION="{os_version}"\nID={os_name.lower().replace(" ", "_")}\nPRETTY_NAME="{os_name} - {os_version}"'
+        os_release_str = f'NAME="{os_name}"\nVERSION="{os_version}"\nID={os_name.lower().replace(" ", "_")}\nPRETTY_NAME="{os_name} {os_version}"'
         inject_os_cmd = [
             "docker", "exec", container_name,
             "sh", "-c", f"cat << 'EOF' > /etc/os-release\n{os_release_str}\nEOF"
         ]
         subprocess.run(inject_os_cmd, capture_output=True, text=True, check=False)
 
-        # Cấu hình IP Wazuh Manager vào ossec.conf bên trong container
+        # Cấu hình IP Wazuh Manager & localfile log collection vào ossec.conf bên trong container
         sed_ip_cmd = [
             "docker", "exec", container_name,
             "sed", "-i",
@@ -283,19 +331,17 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
         ]
         subprocess.run(sed_ip_cmd, capture_output=True, text=True, check=False)
 
-        # Nếu có device_ip từ sơ đồ, chèn <agent_address>
-        if device_ip and device_ip.strip():
-            target_ip = device_ip.strip()
-            sed_addr_cmd = [
-                "docker", "exec", container_name,
-                "sed", "-i",
-                f"s#<agent_name>{device_name}</agent_name>#<agent_name>{device_name}</agent_name>\\n      <agent_address>{target_ip}</agent_address>#g",
-                "/var/ossec/etc/ossec.conf"
-            ]
-            subprocess.run(sed_addr_cmd, capture_output=True, text=True, check=False)
+        # Chèn <agent_address> tương ứng địa chỉ IP từ sơ đồ mạng
+        sed_addr_cmd = [
+            "docker", "exec", container_name,
+            "sed", "-i",
+            f"s#<agent_name>{device_name}</agent_name>#<agent_name>{device_name}</agent_name>\\n      <agent_address>{target_ip}</agent_address>#g",
+            "/var/ossec/etc/ossec.conf"
+        ]
+        subprocess.run(sed_addr_cmd, capture_output=True, text=True, check=False)
 
-        # Thực thi Đăng ký (Enrollment) qua agent-auth
-        auth_cmd = ["docker", "exec", container_name, "/var/ossec/bin/agent-auth", "-m", wazuh_ip, "-A", device_name]
+        # Thực thi Đăng ký (Enrollment) qua agent-auth với cờ -I target_ip để Wazuh Manager nhận đúng IP sơ đồ mạng (không lấy IP 172.17.0.x của Docker bridge)
+        auth_cmd = ["docker", "exec", container_name, "/var/ossec/bin/agent-auth", "-m", wazuh_ip, "-A", device_name, "-I", target_ip]
         if enroll_pass and enroll_pass.strip():
             auth_cmd.extend(["-P", enroll_pass.strip()])
 
@@ -310,16 +356,12 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
         has_key = key_chk.returncode == 0 and bool(key_chk.stdout.strip())
 
         if has_key:
-            # Gửi ngay tức thì luồng log ban đầu (Telemetry initial log stream) sang Wazuh Server
-            try:
-                log_cmd = ["docker", "exec", container_name, "logger", "-t", "wazuh-agent", f"System agent '{device_name}' deployed successfully. Initial log telemetry stream transmitted to manager {wazuh_ip}."]
-                subprocess.run(log_cmd, capture_output=True, text=True, check=False)
-            except Exception as e_log:
-                logger.warning(f"Không thể phát log tức thì: {e_log}")
+            # Sinh dữ liệu log an ninh thực tế & FIM integrity events sang Wazuh Manager
+            generate_agent_telemetry_events(container_name, device_name, target_ip, wazuh_ip)
 
             return {
                 "status": "success",
-                "message": f"🚀 ĐÃ DEPLOY THÀNH CÔNG! Node '{device_name}' đã nhận Key xác thực, gia nhập Wazuh Server ({wazuh_ip}) và phát luồng log giám sát ngay lập tức!",
+                "message": f"🚀 ĐÃ DEPLOY THÀNH CÔNG! Node '{device_name}' (IP: {target_ip}) đã nhận Key xác thực, gia nhập Wazuh Server ({wazuh_ip}) với IP chuẩn sơ đồ mạng và phát dữ liệu log an ninh!",
                 "auth_output": auth_output
             }
         else:
