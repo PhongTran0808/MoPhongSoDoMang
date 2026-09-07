@@ -236,6 +236,14 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
     if not wazuh_ip:
         return {"status": "error", "message": "⚠️ Chưa nhập IP Wazuh Server. Vui lòng nhập địa chỉ IP Wazuh Manager trên thanh công cụ SoDoMang!"}
 
+    name_lower = device_name.lower()
+    is_appliance = any(k in name_lower for k in ["fortigate", "cisco", "firewall", "router", "switch", "forti"])
+    if is_appliance:
+        return {
+            "status": "warning",
+            "message": f"📡 Thiết bị '{device_name}' là Network Appliance (Firewall/Router/Switch). Thiết bị phần cứng này KHÔNG CÀI WAZUH AGENT LINUX. Wazuh giám sát thiết bị này qua Remote Syslog (Agentless - Port 514 UDP). Vui lòng sử dụng tính năng '⚡ Kích Hoạt Luồng Log Syslog (Port 514)'!"
+        }
+
     # Kiểm tra container đã chạy chưa, nếu chưa thì tạo container trước
     st = get_container_status(device_name)
     if not st.get("exists") or st.get("status") != "running":

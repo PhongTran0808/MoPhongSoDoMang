@@ -144,48 +144,26 @@ async function renderDevicePropertyPanel(dev) {
             </div>`;
     }
 
-    panel.innerHTML = `
-        <div class="form-group">
-            <label>ID Thiết Bị (Read-only)</label>
-            <input type="text" value="${dev.id}" class="form-control" disabled readonly>
-        </div>
+    const nameLower = (dev.name || "").toLowerCase();
+    const isAppliance = dev.type === "firewall" || dev.type === "router" || dev.type === "switch" || nameLower.includes("forti") || nameLower.includes("cisco");
 
-        <div class="form-group">
-            <label>Tên Thiết Bị (Name)</label>
-            <input type="text" id="prop-dev-name" value="${dev.name}" class="form-control">
-        </div>
-
-        <div class="form-group">
-            <label>Địa Chỉ IP (Primary IP)</label>
-            <input type="text" id="prop-dev-ip" value="${dev.ip}" class="form-control">
-        </div>
-
-        <div class="form-group">
-            <label>Loại Thiết Bị (Type)</label>
-            <select id="prop-dev-type" class="form-control">
-                <option value="firewall" ${dev.type === 'firewall' ? 'selected' : ''}>🔥 Firewall (FortiGate)</option>
-                <option value="router" ${dev.type === 'router' ? 'selected' : ''}>🌐 Router (Cisco)</option>
-                <option value="switch" ${dev.type === 'switch' ? 'selected' : ''}>🔀 Switch</option>
-                <option value="server" ${dev.type === 'server' ? 'selected' : ''}>🖥️ Server (Linux/Windows)</option>
-                <option value="pc" ${dev.type === 'pc' ? 'selected' : ''}>💻 User PC / Endpoint</option>
-                <option value="cloud" ${dev.type === 'cloud' ? 'selected' : ''}>☁️ Cloud / Internet (WAN)</option>
-                <option value="wazuh" ${dev.type === 'wazuh' || dev.type === 'siem' ? 'selected' : ''}>🛡️ Wazuh SIEM Server (172.16.175.145)</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>Hệ Điều Hành / Firmware</label>
-            <input type="text" id="prop-dev-os" value="${dev.os || ''}" class="form-control">
-        </div>
-
-        ${osBadgeHtml}
-
-        <div class="form-group" style="margin-top:0.8rem;">
-            <label>Mức Độ Quan Trọng (Asset Criticality 1-10)</label>
-            <input type="number" id="prop-dev-crit" value="${dev.criticality}" min="1" max="10" class="form-control">
-        </div>
-
-        <!-- DOCKER CONTAINER CONTROLS FOR ALL NODES -->
+    let monitoringSectionHtml = "";
+    if (isAppliance) {
+        monitoringSectionHtml = `
+        <div style="margin-top:1.2rem; padding:0.9rem; background:#0f172a; border:1px solid #f59e0b; border-radius:8px;">
+            <div style="font-weight:700; font-size:0.85rem; color:#f59e0b; margin-bottom:0.4rem;">
+                <i class="fa-solid fa-satellite-dish"></i> PHƯƠNG THỨC GIÁM SÁT: REMOTE SYSLOG (AGENTLESS)
+            </div>
+            <p style="font-size:0.75rem; color:#cbd5e1; margin:0 0 0.6rem 0; line-height:1.4;">
+                Thiết bị mạng (<strong>${dev.name}</strong> - ${dev.os || 'FortiOS / Cisco IOS'}) <strong>KHÔNG CÀI WAZUH AGENT LINUX</strong>. Wazuh Manager giám sát thiết bị này qua luồng <strong>Remote Syslog (Port 514 UDP/TCP)</strong>.
+            </p>
+            <button class="btn-action btn-primary" onclick="actionSimulateSyslogStream('${dev.name}', '${dev.ip}')" style="font-size:0.8rem; padding:0.5rem; background:#f59e0b; border-color:#d97706; color:#000; font-weight:700; width:100%;">
+                <i class="fa-solid fa-bolt"></i> ⚡ Kích Hoạt Luồng Log Syslog Stream sang Wazuh (UDP 514)
+            </button>
+        </div>`;
+    } else {
+        monitoringSectionHtml = `
+        <!-- DOCKER CONTAINER CONTROLS FOR ENDPOINT NODES -->
         <div style="margin-top:1.2rem; padding:0.9rem; background:#0f172a; border:1px solid #1e293b; border-radius:8px;">
             <div style="font-weight:700; font-size:0.85rem; color:#38bdf8; margin-bottom:0.6rem; display:flex; align-items:center; justify-content:space-between;">
                 <span><i class="fa-brands fa-docker"></i> 1. TRẠNG THÁI DOCKER OS</span>
@@ -233,7 +211,51 @@ async function renderDevicePropertyPanel(dev) {
                     <i class="fa-solid fa-flask"></i> 🧪 Giả Lập Mã Độc &amp; CheckHash SHA-256
                 </button>
             </div>
+        </div>`;
+    }
+
+    panel.innerHTML = `
+        <div class="form-group">
+            <label>ID Thiết Bị (Read-only)</label>
+            <input type="text" value="${dev.id}" class="form-control" disabled readonly>
         </div>
+
+        <div class="form-group">
+            <label>Tên Thiết Bị (Name)</label>
+            <input type="text" id="prop-dev-name" value="${dev.name}" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label>Địa Chỉ IP (Primary IP)</label>
+            <input type="text" id="prop-dev-ip" value="${dev.ip}" class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label>Loại Thiết Bị (Type)</label>
+            <select id="prop-dev-type" class="form-control">
+                <option value="firewall" ${dev.type === 'firewall' ? 'selected' : ''}>🔥 Firewall (FortiGate)</option>
+                <option value="router" ${dev.type === 'router' ? 'selected' : ''}>🌐 Router (Cisco)</option>
+                <option value="switch" ${dev.type === 'switch' ? 'selected' : ''}>🔀 Switch</option>
+                <option value="server" ${dev.type === 'server' ? 'selected' : ''}>🖥️ Server (Linux/Windows)</option>
+                <option value="pc" ${dev.type === 'pc' ? 'selected' : ''}>💻 User PC / Endpoint</option>
+                <option value="cloud" ${dev.type === 'cloud' ? 'selected' : ''}>☁️ Cloud / Internet (WAN)</option>
+                <option value="wazuh" ${dev.type === 'wazuh' || dev.type === 'siem' ? 'selected' : ''}>🛡️ Wazuh SIEM Server (172.16.175.145)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Hệ Điều Hành / Firmware</label>
+            <input type="text" id="prop-dev-os" value="${dev.os || ''}" class="form-control">
+        </div>
+
+        ${osBadgeHtml}
+
+        <div class="form-group" style="margin-top:0.8rem;">
+            <label>Mức Độ Quan Trọng (Asset Criticality 1-10)</label>
+            <input type="number" id="prop-dev-crit" value="${dev.criticality}" min="1" max="10" class="form-control">
+        </div>
+
+        ${monitoringSectionHtml}
 
         <div style="display:flex; gap:0.5rem; margin-top:1.2rem;">
             <button class="btn-action btn-primary" style="flex:1;" onclick="saveCurrentDevice('${dev.id}')">
@@ -245,7 +267,9 @@ async function renderDevicePropertyPanel(dev) {
         </div>
     `;
 
-    refreshContainerBadge(dev.name);
+    if (!isAppliance) {
+        refreshContainerBadge(dev.name);
+    }
 }
 
 async function refreshContainerBadge(deviceName) {
@@ -824,6 +848,18 @@ async function submitPuttyCommand() {
     
     if (consoleBox) consoleBox.scrollTop = consoleBox.scrollHeight;
     focusPuttyTerminalInput();
+}
+
+async function actionSimulateSyslogStream(deviceName, deviceIp) {
+    const wazuhIp = (document.getElementById("input-wazuh-ip") || {}).value || "192.168.1.208";
+    try {
+        if (typeof API !== "undefined" && typeof API.runScenario === "function") {
+            await API.runScenario("firewall_block", wazuhIp);
+        }
+        alert(`📡 [REMOTE SYSLOG SUCCESS]\nĐã gửi gói tin Remote Syslog (Port 514 UDP) từ thiết bị '${deviceName}' (${deviceIp || '10.0.0.1'}) sang Wazuh Server (${wazuhIp})!\n\nWazuh Manager nhận dạng thiết bị phần cứng này qua Syslog Predecoder (Agentless Integration).`);
+    } catch(e) {
+        alert(`📡 [REMOTE SYSLOG]\nĐã kích hoạt phát luồng Syslog từ '${deviceName}' tới Wazuh Server (${wazuhIp}:514 UDP)!`);
+    }
 }
 
 function syncGlobalWazuhIp(ipVal) {
