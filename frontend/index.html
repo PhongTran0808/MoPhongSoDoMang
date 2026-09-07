@@ -461,13 +461,10 @@ div.vis-network div.vis-manipulation div.vis-button {
             <!-- PuTTY Terminal Console Output (Pure Dark TTY Area) -->
             <div id="putty-console-box" style="flex:1; overflow-y:auto; padding:1.2rem; background:#000000; color:#22c55e; font-size:0.88rem; line-height:1.45; white-space:pre-wrap; cursor:text; font-family:'Fira Code', monospace;" onclick="focusPuttyTerminalInput()">
                 <div id="putty-console-history"></div>
-                <div id="putty-prompt-line" style="display:flex; align-items:center; flex-wrap:wrap;">
-                    <span id="putty-prompt-label" style="font-weight:700; color:#38bdf8; margin-right:6px;">root@Target:~#</span>
-                    <span id="putty-cmd-live" style="color:#ffffff; font-weight:600; white-space:pre;"></span>
-                    <span class="tty-cursor" style="display:inline-block; width:8px; height:1.1em; background:#22c55e; margin-left:2px;"></span>
+                <div id="putty-prompt-line" style="display:flex; align-items:center; width:100%; margin-top:4px;">
+                    <span id="putty-prompt-label" style="font-weight:700; color:#38bdf8; margin-right:8px; white-space:nowrap;">root@Target:~#</span>
+                    <input type="text" id="putty-cmd-input" autocomplete="off" spellcheck="false" style="flex:1; background:transparent; border:none; outline:none; color:#ffffff; font-family:'Fira Code', monospace; font-size:0.88rem; font-weight:600; padding:0; margin:0;" onkeydown="handlePuttyInputKey(event)">
                 </div>
-                <!-- Hidden input to capture keyboard events -->
-                <input type="text" id="putty-cmd-input" autocomplete="off" spellcheck="false" style="position:absolute; opacity:0; pointer-events:none; left:-9999px;" oninput="handlePuttyInputLive(event)" onkeydown="handlePuttyInputKey(event)">
             </div>
         </div>
     </div>

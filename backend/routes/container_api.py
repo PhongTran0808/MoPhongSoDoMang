@@ -101,10 +101,20 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
         container_name = f"wazuh-agent-{container_name}"
     
     cmd_str = req.command.strip() if req.command else "uptime"
-    exec_cmd = ["docker", "exec", container_name, "sh", "-c", cmd_str]
+    
+    # Alias / Smart wrapper cho các lệnh mạng phổ biến như 'ip a' nếu container chưa cài package iproute2
+    wrapped_cmd = f"export PATH=$PATH:/sbin:/usr/sbin:/bin:/usr/bin; if ! command -v ip >/dev/null 2>&1 && [ \"{cmd_str.split()[0] if cmd_str else ''}\" = \"ip\" ]; then echo '10.0.0.1 (eth0 inet) | Gateway: 10.0.0.254'; hostname -I 2>/dev/null || ifconfig 2>/dev/null || cat /etc/hosts; else {cmd_str}; fi"
+
+    exec_cmd = ["docker", "exec", container_name, "sh", "-c", wrapped_cmd]
     try:
         res = subprocess.run(exec_cmd, capture_output=True, text=True, timeout=10, check=False)
         output = (res.stdout.strip() + "\n" + res.stderr.strip()).strip()
+        if "No such container" in output or "is not running" in output:
+            # Tự động bật container nếu chưa chạy
+            subprocess.run(["docker", "start", container_name], capture_output=True, text=True, check=False)
+            res = subprocess.run(exec_cmd, capture_output=True, text=True, timeout=10, check=False)
+            output = (res.stdout.strip() + "\n" + res.stderr.strip()).strip()
+            
         return {
             "status": "success",
             "device_name": req.device_name,

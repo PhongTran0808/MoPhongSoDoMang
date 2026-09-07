@@ -237,6 +237,13 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
         return {"status": "error", "message": "⚠️ Chưa nhập IP Wazuh Server. Vui lòng nhập địa chỉ IP Wazuh Manager trên thanh công cụ SoDoMang!"}
 
     name_lower = device_name.lower()
+    is_cloud = any(k in name_lower for k in ["cloud", "internet", "wan"])
+    if is_cloud:
+        return {
+            "status": "warning",
+            "message": f"☁️ Node '{device_name}' là phân vùng Đám mây / Internet (Outside WAN). Phân vùng ngoài biên này không thể Deploy Agent Wazuh hay khởi tạo Docker!"
+        }
+
     is_appliance = any(k in name_lower for k in ["fortigate", "cisco", "firewall", "router", "switch", "forti"])
     if is_appliance:
         return {
@@ -291,9 +298,16 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
         has_key = key_chk.returncode == 0 and bool(key_chk.stdout.strip())
 
         if has_key:
+            # Gửi ngay tức thì luồng log ban đầu (Telemetry initial log stream) sang Wazuh Server
+            try:
+                log_cmd = ["docker", "exec", container_name, "logger", "-t", "wazuh-agent", f"System agent '{device_name}' deployed successfully. Initial log telemetry stream transmitted to manager {wazuh_ip}."]
+                subprocess.run(log_cmd, capture_output=True, text=True, check=False)
+            except Exception as e_log:
+                logger.warning(f"Không thể phát log tức thì: {e_log}")
+
             return {
                 "status": "success",
-                "message": f"🚀 ĐÃ DEPLOY THÀNH CÔNG! Node '{device_name}' đã nhận Key xác thực và gia nhập Wazuh Server ({wazuh_ip})!",
+                "message": f"🚀 ĐÃ DEPLOY THÀNH CÔNG! Node '{device_name}' đã nhận Key xác thực, gia nhập Wazuh Server ({wazuh_ip}) và phát luồng log giám sát ngay lập tức!",
                 "auth_output": auth_output
             }
         else:

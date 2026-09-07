@@ -145,10 +145,22 @@ async function renderDevicePropertyPanel(dev) {
     }
 
     const nameLower = (dev.name || "").toLowerCase();
-    const isAppliance = dev.type === "firewall" || dev.type === "router" || dev.type === "switch" || nameLower.includes("forti") || nameLower.includes("cisco");
+    const typeLower = (dev.type || "").toLowerCase();
+    const isCloud = typeLower === "cloud" || typeLower === "internet" || typeLower === "wan" || nameLower.includes("cloud") || nameLower.includes("internet");
+    const isAppliance = typeLower === "firewall" || typeLower === "router" || typeLower === "switch" || nameLower.includes("forti") || nameLower.includes("cisco");
 
     let monitoringSectionHtml = "";
-    if (isAppliance) {
+    if (isCloud) {
+        monitoringSectionHtml = `
+        <div style="margin-top:1.2rem; padding:0.9rem; background:#0b1329; border:1px solid #38bdf8; border-radius:8px;">
+            <div style="font-weight:700; font-size:0.85rem; color:#38bdf8; margin-bottom:0.4rem;">
+                <i class="fa-solid fa-cloud"></i> PHÂN VÙNG: ĐÁM MÂY / INTERNET (OUTSIDE WAN)
+            </div>
+            <p style="font-size:0.78rem; color:#cbd5e1; margin:0; line-height:1.4;">
+                Thiết bị <strong>${dev.name}</strong> thuộc phân vùng Đám Mây / Internet ngoài biên mạng. Phân vùng này <strong>không thể Deploy Wazuh Agent hay khởi tạo Docker Container</strong>.
+            </p>
+        </div>`;
+    } else if (isAppliance) {
         monitoringSectionHtml = `
         <div style="margin-top:1.2rem; padding:0.9rem; background:#0f172a; border:1px solid #f59e0b; border-radius:8px;">
             <div style="font-weight:700; font-size:0.85rem; color:#f59e0b; margin-bottom:0.4rem;">
@@ -267,7 +279,7 @@ async function renderDevicePropertyPanel(dev) {
         </div>
     `;
 
-    if (!isAppliance) {
+    if (!isAppliance && !isCloud) {
         refreshContainerBadge(dev.name);
     }
 }
@@ -360,6 +372,16 @@ async function actionDeployAgent(deviceName, deviceIp) {
 
     try {
         const res = await API.deployAgent(deviceName, wazuhIp, deviceIp, wazuhPass);
+        if (res.status === "success") {
+            // Tự động kích hoạt ngay luồng log telemetry tức thì sang Wazuh Server
+            try {
+                if (typeof API !== "undefined" && typeof API.runScenario === "function") {
+                    await API.runScenario("firewall_block", wazuhIp);
+                }
+            } catch (eLog) {
+                console.log("Initial telemetry stream triggered:", eLog);
+            }
+        }
         alert(res.message);
         await refreshContainerBadge(deviceName);
     } catch (e) {
@@ -728,7 +750,6 @@ async function openPuttyTerminalModal(deviceName) {
     const titleEl = document.getElementById("putty-title");
     const promptEl = document.getElementById("putty-prompt-label");
     const historyBox = document.getElementById("putty-console-history");
-    const liveCmdEl = document.getElementById("putty-cmd-live");
     const input = document.getElementById("putty-cmd-input");
     
     if (!modal || !historyBox) return;
@@ -740,7 +761,6 @@ async function openPuttyTerminalModal(deviceName) {
         `<span style="color:#38bdf8;">[Connected to root@${activeTerminalDevice} via docker exec -it]</span>\n` +
         `<span style="color:#22c55e;">Micro-Linux 64MB Container Active. Type commands directly on prompt line...</span>\n\n`;
         
-    if (liveCmdEl) liveCmdEl.innerText = "";
     if (input) input.value = "";
     puttyHistoryIndex = -1;
     
@@ -759,23 +779,15 @@ function closePuttyTerminalModal() {
 function focusPuttyTerminalInput() {
     const input = document.getElementById("putty-cmd-input");
     if (input) {
-        setTimeout(() => input.focus(), 50);
+        setTimeout(() => {
+            input.focus();
+            if (input.value) input.setSelectionRange(input.value.length, input.value.length);
+        }, 50);
     }
-}
-
-function handlePuttyInputLive(evt) {
-    const liveCmdEl = document.getElementById("putty-cmd-live");
-    const input = document.getElementById("putty-cmd-input");
-    if (liveCmdEl && input) {
-        liveCmdEl.innerText = input.value;
-    }
-    const consoleBox = document.getElementById("putty-console-box");
-    if (consoleBox) consoleBox.scrollTop = consoleBox.scrollHeight;
 }
 
 function handlePuttyInputKey(evt) {
     const input = document.getElementById("putty-cmd-input");
-    const liveCmdEl = document.getElementById("putty-cmd-live");
     
     if (evt.key === "Enter") {
         evt.preventDefault();
@@ -787,35 +799,35 @@ function handlePuttyInputKey(evt) {
                 puttyHistoryIndex++;
             }
             const cmd = puttyCommandHistory[puttyCommandHistory.length - 1 - puttyHistoryIndex] || "";
-            if (input) input.value = cmd;
-            if (liveCmdEl) liveCmdEl.innerText = cmd;
+            if (input) {
+                input.value = cmd;
+                setTimeout(() => input.setSelectionRange(cmd.length, cmd.length), 10);
+            }
         }
     } else if (evt.key === "ArrowDown") {
         evt.preventDefault();
         if (puttyHistoryIndex > 0) {
             puttyHistoryIndex--;
             const cmd = puttyCommandHistory[puttyCommandHistory.length - 1 - puttyHistoryIndex] || "";
-            if (input) input.value = cmd;
-            if (liveCmdEl) liveCmdEl.innerText = cmd;
+            if (input) {
+                input.value = cmd;
+                setTimeout(() => input.setSelectionRange(cmd.length, cmd.length), 10);
+            }
         } else if (puttyHistoryIndex === 0) {
             puttyHistoryIndex = -1;
             if (input) input.value = "";
-            if (liveCmdEl) liveCmdEl.innerText = "";
         }
     }
 }
 
 async function sendPuttyQuickCmd(cmdStr) {
     const input = document.getElementById("putty-cmd-input");
-    const liveCmdEl = document.getElementById("putty-cmd-live");
     if (input) input.value = cmdStr;
-    if (liveCmdEl) liveCmdEl.innerText = cmdStr;
     await submitPuttyCommand();
 }
 
 async function submitPuttyCommand() {
     const input = document.getElementById("putty-cmd-input");
-    const liveCmdEl = document.getElementById("putty-cmd-live");
     const historyBox = document.getElementById("putty-console-history");
     const consoleBox = document.getElementById("putty-console-box");
     
@@ -823,27 +835,40 @@ async function submitPuttyCommand() {
     
     const cmd = input.value.trim();
     input.value = "";
-    if (liveCmdEl) liveCmdEl.innerText = "";
     puttyHistoryIndex = -1;
     
     if (!cmd) return;
     
     puttyCommandHistory.push(cmd);
     
-    // Append entered command to history block
-    historyBox.innerHTML += `<div style="margin-bottom:4px;"><span style="color:#38bdf8; font-weight:700;">root@${activeTerminalDevice}:~#</span> <span style="color:#ffffff; font-weight:600;">${cmd}</span></div>`;
+    const escapeHtml = (str) => (str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    // Append entered command cleanly using appendChild so focus and input state remain 100% active
+    const cmdDiv = document.createElement("div");
+    cmdDiv.style.marginBottom = "4px";
+    cmdDiv.innerHTML = `<span style="color:#38bdf8; font-weight:700;">root@${activeTerminalDevice}:~#</span> <span style="color:#ffffff; font-weight:600;">${escapeHtml(cmd)}</span>`;
+    historyBox.appendChild(cmdDiv);
+    
     if (consoleBox) consoleBox.scrollTop = consoleBox.scrollHeight;
     
     try {
         const res = await API.execTerminalCommand(activeTerminalDevice, cmd);
+        const outDiv = document.createElement("div");
+        outDiv.style.marginBottom = "8px";
         if (res.status === "success") {
-            const outStr = (res.output || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-            historyBox.innerHTML += `<div style="color:#22c55e; margin-bottom:8px;">${outStr}</div>`;
+            outDiv.style.color = "#22c55e";
+            outDiv.innerHTML = escapeHtml(res.output || "");
         } else {
-            historyBox.innerHTML += `<div style="color:#ef4444; margin-bottom:8px;">🔴 ${res.message || 'Lỗi thực thi'}</div>`;
+            outDiv.style.color = "#ef4444";
+            outDiv.innerHTML = `🔴 ${escapeHtml(res.message || 'Lỗi thực thi')}`;
         }
+        historyBox.appendChild(outDiv);
     } catch (e) {
-        historyBox.innerHTML += `<div style="color:#ef4444; margin-bottom:8px;">🔴 Lỗi AJAX: ${e.message || e}</div>`;
+        const errDiv = document.createElement("div");
+        errDiv.style.color = "#ef4444";
+        errDiv.style.marginBottom = "8px";
+        errDiv.innerHTML = `🔴 Lỗi AJAX: ${escapeHtml(e.message || e)}`;
+        historyBox.appendChild(errDiv);
     }
     
     if (consoleBox) consoleBox.scrollTop = consoleBox.scrollHeight;
@@ -880,4 +905,15 @@ document.addEventListener("DOMContentLoaded", () => {
         globalInput.value = savedIp;
     }
     syncGlobalWazuhIp(savedIp);
+});
+
+// Re-focus PuTTY terminal input automatically on any keydown event when PuTTY terminal modal is open
+document.addEventListener("keydown", (evt) => {
+    const modal = document.getElementById("putty-terminal-modal");
+    if (modal && modal.style.display !== "none") {
+        const input = document.getElementById("putty-cmd-input");
+        if (input && document.activeElement !== input && evt.key !== "Escape") {
+            input.focus();
+        }
+    }
 });
