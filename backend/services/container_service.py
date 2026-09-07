@@ -121,6 +121,21 @@ def get_os_profile_for_device(device_name: str) -> Dict[str, str]:
     else:
         return {"os_name": "Ubuntu Linux", "os_version": "Ubuntu 22.04.3 LTS", "kernel": "Linux 5.15.0-88-generic", "arch": "x86_64"}
 
+def get_device_ip_from_topology(device_name: str) -> str:
+    """Đọc địa chỉ IP chính xác từ topology.json của thiết bị trên sơ đồ mạng."""
+    try:
+        if TOPOLOGY_JSON_PATH.exists():
+            with open(TOPOLOGY_JSON_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                devices = data.get("devices", [])
+                for d in devices:
+                    if d.get("name") == device_name or d.get("id") == device_name:
+                        if d.get("ip"):
+                            return d.get("ip")
+    except Exception as e:
+        logger.warning(f"Lỗi đọc IP từ topology.json cho {device_name}: {e}")
+    return "172.16.175.241"
+
 def sanitize_container_name(name: str) -> str:
     """Tạo tên container hợp lệ từ tên thiết bị."""
     sanitized = re.sub(r'[^a-zA-Z0-9_-]', '_', name)
@@ -229,20 +244,35 @@ def create_container(device_name: str, device_ip: str = None, memory_limit: str 
     except Exception as e:
         return {"status": "error", "message": f"🔴 Lỗi thực thi Docker: {str(e)}"}
 
-def get_device_ip_from_topology(device_name: str) -> str:
+def purge_stale_agent_from_manager(device_name: str, wazuh_manager_ip: str):
+    """
+    Tự động kết nối REST API của Wazuh Manager (Port 55000) với tài khoản admin 'wazuh',
+    tìm và xóa sạch agent trùng lặp cũ (nếu có) để tránh lỗi 'Duplicate IP' hoặc 'Duplicate agent name'.
+    """
+    import urllib3
+    import requests
+    urllib3.disable_warnings()
+    
+    mgr_host = wazuh_manager_ip.strip() if (wazuh_manager_ip and wazuh_manager_ip.strip()) else "192.168.1.208"
     try:
-        if TOPOLOGY_JSON_PATH.exists():
-            with open(TOPOLOGY_JSON_PATH, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            for dev in data.get("devices", []):
-                d_name = dev.get("name", "")
-                d_id = dev.get("id", "")
-                if d_name.lower() == device_name.lower() or d_id.lower() == device_name.lower():
-                    if dev.get("ip"):
-                        return dev["ip"]
-    except Exception:
-        pass
-    return "172.16.175.241"
+        r = requests.post(f"https://{mgr_host}:55000/security/user/authenticate", auth=("wazuh", "wazuh"), verify=False, timeout=3)
+        if r.status_code != 200:
+            return
+        token = r.json().get("data", {}).get("token")
+        if not token:
+            return
+        headers = {"Authorization": f"Bearer {token}"}
+        
+        search_res = requests.get(f"https://{mgr_host}:55000/agents?select=id,name&q=name={device_name}", headers=headers, verify=False, timeout=3)
+        if search_res.status_code == 200:
+            items = search_res.json().get("data", {}).get("affected_items", [])
+            for it in items:
+                agent_id = it.get("id")
+                if agent_id and agent_id != "000":
+                    requests.delete(f"https://{mgr_host}:55000/agents?agents_list={agent_id}&status=all&older_than=0s", headers=headers, verify=False, timeout=3)
+                    logger.info(f"🗑️ Đã tự động xóa agent trùng lặp cũ {device_name} (ID: {agent_id}) trên Wazuh Manager")
+    except Exception as e:
+        logger.warning(f"Không thể tự động xoá agent cũ trên Manager API: {e}")
 
 def generate_agent_telemetry_events(container_name: str, device_name: str, target_ip: str, wazuh_ip: str):
     """
@@ -299,6 +329,9 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
     # Tra cứu IP chính xác của thiết bị từ Sơ Đồ Mạng
     target_ip = device_ip.strip() if (device_ip and device_ip.strip()) else get_device_ip_from_topology(device_name)
 
+    # 1. Tự động xóa agent trùng lặp cũ trên Wazuh Manager nếu có
+    purge_stale_agent_from_manager(device_name, wazuh_ip)
+
     # Kiểm tra container đã chạy chưa, nếu chưa thì tạo container trước
     st = get_container_status(device_name)
     if not st.get("exists") or st.get("status") != "running":
@@ -310,19 +343,27 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
     time.sleep(1.0)
 
     try:
+        # Xóa client.keys cũ trong container để đảm bảo đăng ký key mới tinh
+        subprocess.run(["docker", "exec", container_name, "rm", "-f", "/var/ossec/etc/client.keys"], capture_output=True, text=True, check=False)
+
         # Inject exact OS Profile metadata into container's /etc/os-release so Wazuh Manager registers the correct OS name/version
         os_prof = get_os_profile_for_device(device_name)
-        os_name = os_prof.get("os_name", "Linux")
-        os_version = os_prof.get("os_version", "Ubuntu 22.04 LTS")
+        raw_os_name = os_prof.get("os_name", "Linux")
+        raw_os_ver = os_prof.get("os_version", "Ubuntu 22.04 LTS")
 
-        os_release_str = f'NAME="{os_name}"\nVERSION="{os_version}"\nID={os_name.lower().replace(" ", "_")}\nPRETTY_NAME="{os_name} {os_version}"'
+        if "windows" in raw_os_name.lower():
+            clean_ver = raw_os_ver.replace("Windows ", "").strip()
+            os_release_str = f'NAME="Windows"\nVERSION="{clean_ver}"\nID=windows\nPRETTY_NAME="Microsoft Windows {clean_ver}"'
+        else:
+            os_release_str = f'NAME="{raw_os_name}"\nVERSION="{raw_os_ver}"\nID={raw_os_name.lower().replace(" ", "_")}\nPRETTY_NAME="{raw_os_name} {raw_os_ver}"'
+
         inject_os_cmd = [
             "docker", "exec", container_name,
             "sh", "-c", f"cat << 'EOF' > /etc/os-release\n{os_release_str}\nEOF"
         ]
         subprocess.run(inject_os_cmd, capture_output=True, text=True, check=False)
 
-        # Cấu hình IP Wazuh Manager & localfile log collection vào ossec.conf bên trong container
+        # Cấu hình IP Wazuh Manager vào ossec.conf bên trong container & xoá agent_address gây xung đột socket
         sed_ip_cmd = [
             "docker", "exec", container_name,
             "sed", "-i",
@@ -331,14 +372,14 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
         ]
         subprocess.run(sed_ip_cmd, capture_output=True, text=True, check=False)
 
-        # Chèn <agent_address> tương ứng địa chỉ IP từ sơ đồ mạng
-        sed_addr_cmd = [
+        # Loại bỏ bất kỳ thẻ <agent_address> cũ nào để tránh Duplicate IP / socket mismatch
+        rm_addr_cmd = [
             "docker", "exec", container_name,
             "sed", "-i",
-            f"s#<agent_name>{device_name}</agent_name>#<agent_name>{device_name}</agent_name>\\n      <agent_address>{target_ip}</agent_address>#g",
+            "/<agent_address>/d",
             "/var/ossec/etc/ossec.conf"
         ]
-        subprocess.run(sed_addr_cmd, capture_output=True, text=True, check=False)
+        subprocess.run(rm_addr_cmd, capture_output=True, text=True, check=False)
 
         # Thực thi Đăng ký (Enrollment) qua agent-auth với cờ -i để Wazuh Manager cho phép kết nối tức thì (chuyển trạng thái Active 🟢 trong 5s)
         auth_cmd = ["docker", "exec", container_name, "/var/ossec/bin/agent-auth", "-m", wazuh_ip, "-A", device_name, "-i"]

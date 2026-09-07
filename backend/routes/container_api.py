@@ -204,7 +204,7 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
             return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": cisco_out}
 
     # --- FortiGate CLI Command Handling ---
-    if "forti" in device_lower or "firewall" in device_lower:
+    if "forti" in device_lower or "firewall" in device_lower or "fw" in device_lower:
         if "get system status" in cmd_lower:
             forti_out = (
                 f"Version: FortiGate-600F v7.2.5,build1523,230510 (GA.M)\n"
@@ -215,7 +215,7 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
                 f"Serial-Number: FG600F-TK23091045\n"
                 f"HA mode: a-p, cluster index: 0\n"
                 f"Operation Mode: NAT\n"
-                f"System time: Mon Sep  7 13:00:00 2026"
+                f"System time: Mon Sep  7 13:28:00 2026"
             )
             return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": forti_out}
         elif "show firewall policy" in cmd_lower:
@@ -231,6 +231,33 @@ def execute_terminal_endpoint(req: TerminalExecRequest):
                 f"        set nat enable\n"
                 f"    next\n"
                 f"end"
+            )
+            return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": forti_out}
+        elif "get router" in cmd_lower or "routing-table" in cmd_lower:
+            forti_out = (
+                f"Codes: K - kernel, C - connected, S - static, R - RIP, B - BGP\n"
+                f"       O - OSPF, IA - OSPF inter area\n\n"
+                f"S*      0.0.0.0/0 [10/0] via {gateway_ip}, port1-WAN\n"
+                f"C       {ip_parts[0]}.{ip_parts[1]}.{ip_parts[2]}.0/24 is directly connected, port2-LAN ({target_ip})\n"
+                f"C       10.0.10.0/24 is directly connected, port3-VLAN10\n"
+                f"C       10.0.20.0/24 is directly connected, port4-VLAN20"
+            )
+            return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": forti_out}
+        elif "diagnose" in cmd_lower or "top" in cmd_lower:
+            forti_out = (
+                f"Run Time:  142 days, 8 hours and 12 minutes\n"
+                f"0U, 0S, 99I; 3945T, 2104F, 1841KF\n"
+                f"       fortiosd      104      S       0.2     2.4\n"
+                f"        ipsengine      188      S       0.1     4.8\n"
+                f"         miglogd       215      S       0.0     1.2\n"
+                f"          cmdbsvr       102      S       0.0     0.9"
+            )
+            return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": forti_out}
+        else:
+            forti_out = (
+                f"{req.device_name} # {cmd_str}\n"
+                f"FortiOS v7.2.5 (GA.M): Command '{cmd_str}' executed successfully.\n"
+                f"System status: OK [Interface IP: {target_ip}]"
             )
             return {"status": "success", "device_name": req.device_name, "command": cmd_str, "returncode": 0, "output": forti_out}
 
