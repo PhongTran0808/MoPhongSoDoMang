@@ -85,6 +85,10 @@ def export_to_agent_wazuh() -> Dict[str, Any]:
         })
 
     try:
+        agent_wazuh_dir = AGENT_WAZUH_KNOWN_DEVICES.parent.parent
+        if not agent_wazuh_dir.exists():
+            return {"status": "disabled", "message": "Hệ thống AgentWazuh không có sẵn trên máy này. SoDoMang tiếp tục vận hành độc lập 100%."}
+
         AGENT_WAZUH_KNOWN_DEVICES.parent.mkdir(parents=True, exist_ok=True)
         AGENT_WAZUH_KNOWN_DEVICES.write_text(json.dumps(exported_list, indent=2, ensure_ascii=False), encoding="utf-8")
         logger.info(f"Exported {len(exported_list)} devices to AgentWazuh: {AGENT_WAZUH_KNOWN_DEVICES}")
@@ -92,3 +96,4 @@ def export_to_agent_wazuh() -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Failed to export to AgentWazuh: {e}")
         return {"status": "error", "message": str(e)}
+

@@ -208,13 +208,41 @@ def get_container_status(device_name: str) -> Dict[str, Any]:
             "deployed": False
         }
 
+def ensure_docker_network_for_ip(target_ip: str) -> str:
+    """
+    Xác định Subnet & Tự động tạo Docker Network cho dải IP tĩnh tương ứng từ sơ đồ mạng.
+    Bọc trong block try-except để bỏ qua lỗi nếu network đã tồn tại.
+    """
+    try:
+        parts = target_ip.strip().split('.')
+        if len(parts) != 4:
+            return "bridge"
+
+        subnet = f"{parts[0]}.{parts[1]}.{parts[2]}.0/24"
+        net_name = f"wazuh_net_{parts[0]}_{parts[1]}_{parts[2]}_0"
+
+        inspect_res = subprocess.run(["docker", "network", "inspect", net_name], capture_output=True, text=True, check=False)
+        if inspect_res.returncode != 0:
+            create_cmd = ["docker", "network", "create", "-o", "com.docker.network.bridge.enable_ip_masquerade=true", "--subnet", subnet, net_name]
+            subprocess.run(create_cmd, capture_output=True, text=True, check=False)
+            logger.info(f"🌐 Đã tự động tạo Docker Network {net_name} cho Subnet {subnet}")
+        return net_name
+    except Exception as e:
+        logger.warning(f"Không thể tạo Docker Network cho IP {target_ip}: {e}")
+        return "bridge"
+
 def create_container(device_name: str, device_ip: str = None, memory_limit: str = "64m") -> Dict[str, Any]:
-    """Khởi tạo Container Docker thuần (Clean OS), giới hạn bộ nhớ RAM 64MB."""
+    """Khởi tạo Container Docker thuần (Clean OS) với IP tĩnh và Subnet tương ứng từ sơ đồ mạng."""
     container_name = sanitize_container_name(device_name)
+    target_ip = device_ip.strip() if (device_ip and device_ip.strip()) else get_device_ip_from_topology(device_name)
 
     # Nếu container đã tồn tại thì xóa trước để khởi tạo lại mới tinh
     subprocess.run(["docker", "rm", "-f", container_name], capture_output=True, text=True, check=False)
 
+    # Bước 1: Xác định Subnet & Tạo Docker Network (nếu chưa có)
+    net_name = ensure_docker_network_for_ip(target_ip)
+
+    # Bước 2: Gắn tham số IP tĩnh (--net & --ip) khi khởi tạo Container
     cmd = [
         "docker", "run", "-d",
         "--name", container_name,
@@ -223,18 +251,24 @@ def create_container(device_name: str, device_ip: str = None, memory_limit: str 
         "--cpus", "0.5",
         "-e", "WAZUH_MANAGER_SERVER=0.0.0.0", # IP tạm rỗng, chưa kết nối
         "-e", f"WAZUH_AGENT_NAME={device_name}",
-        "--restart", "always",
-        "wazuh/wazuh-agent:4.14.7"
+        "--restart", "always"
     ]
+
+    if net_name and net_name != "bridge" and target_ip:
+        cmd.extend(["--net", net_name, "--ip", target_ip])
+
+    cmd.append("wazuh/wazuh-agent:4.14.7")
 
     try:
         res = subprocess.run(cmd, capture_output=True, text=True, check=False)
         if res.returncode == 0:
             return {
                 "status": "success",
-                "message": f"🟢 Đã khởi tạo Docker Container {container_name} (Hệ điều hành Micro Linux RAM {memory_limit} sẵn sàng). Container CHƯA đăng ký vào Wazuh Server.",
+                "message": f"🟢 Đã khởi tạo Docker Container {container_name} (IP tĩnh: {target_ip}, Network: {net_name}, RAM {memory_limit} sẵn sàng). Container CHƯA đăng ký vào Wazuh Server.",
                 "container_id": res.stdout.strip()[:12],
-                "memory_limit": memory_limit
+                "memory_limit": memory_limit,
+                "ip": target_ip,
+                "network": net_name
             }
         else:
             return {
@@ -280,12 +314,35 @@ def generate_agent_telemetry_events(container_name: str, device_name: str, targe
     và đẩy trực tiếp qua wazuh-logcollector sang Wazuh Manager để hiển thị biểu đồ MITRE ATT&CK & Security Events.
     """
     import time
+def generate_agent_telemetry_events(container_name: str, device_name: str, target_ip: str, wazuh_ip: str):
+    """
+    Sinh các log an ninh thực tế (SSH Brute-force, Sudo Escalation, User Creation, Firewall Blocks, FIM Scans)
+    và đẩy trực tiếp qua wazuh-logcollector sang Wazuh Manager để hiển thị biểu đồ Threat Hunting, MITRE ATT&CK & Events.
+    """
+    import time
     try:
         # 1. Đảm bảo ossec.conf trong container đã có cấu hình <localfile> đọc /var/log/syslog & /var/log/auth.log
-        check_lf = subprocess.run(["docker", "exec", container_name, "grep", "-q", "/var/log/syslog", "/var/ossec/etc/ossec.conf"], capture_output=True, text=True, check=False)
-        if check_lf.returncode != 0:
-            lf_script = """sed -i '/<\\/ossec_config>/i\\  <localfile>\\n    <log_format>syslog</log_format>\\n    <location>/var/log/syslog</location>\\n  </localfile>\\n  <localfile>\\n    <log_format>syslog</log_format>\\n    <location>/var/log/auth.log</location>\\n  </localfile>' /var/ossec/etc/ossec.conf"""
-            subprocess.run(["docker", "exec", container_name, "sh", "-c", lf_script], capture_output=True, text=True, check=False)
+        python_inject = """
+try:
+    with open('/var/ossec/etc/ossec.conf', 'r') as f:
+        content = f.read()
+    if '</ossec_config>' in content and '/var/log/syslog' not in content:
+        lf_xml = '''  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/syslog</location>
+  </localfile>
+  <localfile>
+    <log_format>syslog</log_format>
+    <location>/var/log/auth.log</location>
+  </localfile>
+</ossec_config>'''
+        content = content.replace('</ossec_config>', lf_xml)
+        with open('/var/ossec/etc/ossec.conf', 'w') as f:
+            f.write(content)
+except Exception as e:
+    pass
+"""
+        subprocess.run(["docker", "exec", container_name, "python3", "-c", python_inject], capture_output=True, text=True, check=False)
 
         now_str = time.strftime("%b %d %H:%M:%S")
         events = [
@@ -342,12 +399,10 @@ def deploy_agent_to_manager(device_name: str, wazuh_manager_ip: str, device_ip: 
     # 1. Tự động xóa agent trùng lặp cũ trên Wazuh Manager nếu có
     purge_stale_agent_from_manager(device_name, wazuh_ip)
 
-    # Kiểm tra container đã chạy chưa, nếu chưa thì tạo container trước
-    st = get_container_status(device_name)
-    if not st.get("exists") or st.get("status") != "running":
-        create_res = create_container(device_name, target_ip)
-        if create_res.get("status") == "error":
-            return create_res
+    # 2. Tự động khởi tạo Container với đúng IP tĩnh & Subnet tương ứng từ Sơ Đồ Mạng
+    create_res = create_container(device_name, target_ip)
+    if create_res.get("status") == "error":
+        return create_res
 
     import time
     time.sleep(1.0)
